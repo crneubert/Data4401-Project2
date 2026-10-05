@@ -1,0 +1,385 @@
+---
+title: "Home Credit Logistic Regression Baseline"
+format: html
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+# Check that the packages needed for this analysis are installed.
+required_packages <- c("tidyverse", "googledrive")
+missing_packages <- required_packages[!vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)]
+
+if (length(missing_packages) > 0) {
+  stop(
+    "Install these packages before running the document: ",
+    paste(missing_packages, collapse = ", ")
+  )
+}
+
+library(tidyverse)
+```
+
+## Load the Home Credit data from the shared Google Drive
+
+`load_table()` downloads each CSV only the first time it is used. Later runs read the cached copy. Call it with another table name, such as `load_table("bureau")`, when a history table is needed.
+
+```{r load-data}
+# These IDs tell R which files to download from the shared Google Drive.
+drive_file_ids <- c(
+  application_test = "1aSCg7GlC4hluYPybtM00p9FzDWJHHtql",
+  application_train = "1leSsunoq4XyViBVgrZ0dCIEWQePWi_AV",
+  bureau = "1XoTBbU-SMbjz2G8h12TxiZpjJIa-cZh_",
+  bureau_balance = "1vDQPrD5LEc3E4FFBrpLqWaPRq3ZRg4UP",
+  credit_card_balance = "10gP4aVPjxhXt_uWanDNHeUV2HCA_j0Vp",
+  HomeCredit_columns_description = "1z95kRXkg5bPPAenOFPnsE8pZwQcznCok",
+  installments_payments = "19LEAwLvsJCOMuQ-GMmKNeQr8YNA4glVd",
+  POS_CASH_balance = "1_e2CfFcyrxki6j9KI5azFoQIP0EqlmYw",
+  previous_application = "1UltfcT1hOhF3S8e0VKYFyeKR7DGzisOd",
+  sample_submission = "1YNKdy7FL30LaeRLV7r1uyzQY6gOXJBFj"
+)
+
+# Save downloaded files in a local cache so they are not downloaded every time.
+cache_root <- Sys.getenv("LOCALAPPDATA", unset = tools::R_user_dir("data4401-project2", "cache"))
+data_dir <- file.path(cache_root, "data4401-project2", "home-credit-default-risk")
+
+# Download a table only when it is not already available in the cache.
+load_table <- function(name, ...) {
+  if (!name %in% names(drive_file_ids)) {
+    stop("Unknown table: ", name)
+  }
+
+  csv_path <- file.path(data_dir, paste0(name, ".csv"))
+
+  if (!file.exists(csv_path)) {
+    dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
+    googledrive::drive_deauth()
+    googledrive::drive_download(
+      file = googledrive::as_id(drive_file_ids[[name]]),
+      path = csv_path,
+      overwrite = FALSE
+    )
+  }
+
+  readr::read_csv(csv_path, show_col_types = FALSE, ...)
+}
+
+# Load the main training and competition test tables.
+application_train <- load_table("application_train")
+application_test <- load_table("application_test")
+
+cat("Loaded train:", nrow(application_train), "rows x", ncol(application_train), "columns\n")
+cat("Loaded test:", nrow(application_test), "rows x", ncol(application_test), "columns\n")
+```
+
+# Pre-Processing
+
+```{r inspect-data}
+# Preview the rows, variable types, and summary statistics.
+head(application_train)
+str(application_train)
+summary(application_train)
+names(application_train)
+```
+
+```{r target-distribution}
+# Count defaults (1) and non-defaults (0) to check the class imbalance.
+target_count <- table(application_train$TARGET)
+target_percent <- prop.table(target_count) * 100
+
+target_count
+target_percent
+```
+
+```{r missing-values}
+# Calculate the number and percentage of missing values in each column.
+missing_table <- data.frame(
+  variable = names(application_train),
+  missing_count = colSums(is.na(application_train)),
+  missing_percent = colMeans(is.na(application_train)) * 100,
+  row.names = NULL
+) |>
+  filter(missing_count > 0) |>
+  arrange(desc(missing_percent))
+
+head(missing_table, 30)
+```
+
+```{r variable-types}
+# Separate numeric columns from categorical columns.
+numeric_cols <- names(application_train)[vapply(application_train, is.numeric, logical(1))]
+categorical_cols <- names(application_train)[!vapply(application_train, is.numeric, logical(1))]
+
+cat("Numeric:", length(numeric_cols), "\n")
+cat("Categorical:", length(categorical_cols), "\n\n")
+cat("Categorical columns:\n")
+print(categorical_cols)
+```
+
+```{r missing-value-groups}
+# Summarize how severe the missing-data problem is across the variables.
+cat("Over 60% missing:", sum(missing_table$missing_percent > 60), "\n")
+cat("40-60% missing:", sum(missing_table$missing_percent > 40 & missing_table$missing_percent <= 60), "\n")
+cat("20-40% missing:", sum(missing_table$missing_percent > 20 & missing_table$missing_percent <= 40), "\n")
+cat("Under 20% missing:", sum(missing_table$missing_percent <= 20), "\n")
+```
+
+```{r define-x-y}
+# Keep customer IDs separate, use TARGET as y, and use the remaining columns as X.
+ids <- application_train$SK_ID_CURR
+y <- application_train$TARGET
+X <- application_train |>
+  select(-TARGET, -SK_ID_CURR)
+```
+
+# 1. Random Split
+
+```{r random-split}
+# Select 70% of row numbers for training using a reproducible random seed.
+set.seed(42)
+random_train_rows <- sample(
+  seq_len(nrow(application_train)),
+  size = floor(0.70 * nrow(application_train))
+)
+# Divide the remaining 30% equally between validation and test sets.
+random_temp_rows <- setdiff(seq_len(nrow(application_train)), random_train_rows)
+random_val_rows <- sample(random_temp_rows, size = floor(0.50 * length(random_temp_rows)))
+random_test_rows <- setdiff(random_temp_rows, random_val_rows)
+
+# Create the three data frames using the selected row numbers.
+random_train <- application_train |> slice(random_train_rows)
+random_val <- application_train |> slice(random_val_rows)
+random_test <- application_train |> slice(random_test_rows)
+
+X_train_random <- random_train |> select(-TARGET, -SK_ID_CURR)
+y_train_random <- random_train$TARGET
+X_val_random <- random_val |> select(-TARGET, -SK_ID_CURR)
+y_val_random <- random_val$TARGET
+X_test_random <- random_test |> select(-TARGET, -SK_ID_CURR)
+y_test_random <- random_test$TARGET
+
+cat("Training:", nrow(X_train_random), "rows x", ncol(X_train_random), "columns\n")
+cat("Validation:", nrow(X_val_random), "rows x", ncol(X_val_random), "columns\n")
+cat("Test:", nrow(X_test_random), "rows x", ncol(X_test_random), "columns\n")
+```
+
+# 2. Stratified Split
+
+```{r stratified-split}
+# Add a temporary row ID so rows can be tracked through the split.
+data_with_row_id <- application_train |>
+  mutate(.row_id = row_number())
+
+# Sample 70% within each TARGET group to preserve the class percentages.
+set.seed(42)
+strat_train <- data_with_row_id |>
+  group_by(TARGET) |>
+  slice_sample(prop = 0.70) |>
+  ungroup()
+
+# Rows not selected for training form the temporary 30% set.
+strat_temp <- data_with_row_id |>
+  anti_join(strat_train |> select(.row_id), by = ".row_id")
+
+# Split the temporary set equally into validation and test sets within each class.
+set.seed(42)
+strat_val <- strat_temp |>
+  group_by(TARGET) |>
+  slice_sample(prop = 0.50) |>
+  ungroup()
+
+strat_test <- strat_temp |>
+  anti_join(strat_val |> select(.row_id), by = ".row_id")
+
+# The temporary row ID is no longer needed after splitting.
+strat_train <- strat_train |> select(-.row_id)
+strat_val <- strat_val |> select(-.row_id)
+strat_test <- strat_test |> select(-.row_id)
+
+# Separate predictors (X) and the outcome (y) for each stratified set.
+X_train_strat <- strat_train |> select(-TARGET, -SK_ID_CURR)
+y_train_strat <- strat_train$TARGET
+X_val_strat <- strat_val |> select(-TARGET, -SK_ID_CURR)
+y_val_strat <- strat_val$TARGET
+X_test_strat <- strat_test |> select(-TARGET, -SK_ID_CURR)
+y_test_strat <- strat_test$TARGET
+
+cat("Training:", nrow(X_train_strat), "rows x", ncol(X_train_strat), "columns\n")
+cat("Validation:", nrow(X_val_strat), "rows x", ncol(X_val_strat), "columns\n")
+cat("Test:", nrow(X_test_strat), "rows x", ncol(X_test_strat), "columns\n")
+```
+
+```{r verify-stratification}
+# This helper displays the percentage of observations in each TARGET class.
+class_percent <- function(values) {
+  prop.table(table(values)) * 100
+}
+
+cat("Original:\n")
+print(class_percent(y))
+cat("\nTraining:\n")
+print(class_percent(y_train_strat))
+cat("\nValidation:\n")
+print(class_percent(y_val_strat))
+cat("\nTest:\n")
+print(class_percent(y_test_strat))
+```
+
+# 3. Logistic Regression Baseline
+
+This baseline uses the stratified training and validation sets created above. The code uses `tidyverse` for data preparation and base R's built-in `glm()` for logistic regression. All medians, modes, means, standard deviations, and category levels are learned from the training set only. The test set remains untouched for the final evaluation.
+
+```{r logistic-regression-baseline, message=FALSE, warning=FALSE}
+# Identify numeric and categorical columns from the training set.
+numeric_features <- X_train_strat |>
+  select(where(is.numeric)) |>
+  names()
+
+categorical_features <- X_train_strat |>
+  select(where(Negate(is.numeric))) |>
+  names()
+
+# Store the training-set values needed for preprocessing.
+numeric_medians <- X_train_strat |>
+  summarise(across(all_of(numeric_features), ~ median(.x, na.rm = TRUE)))
+
+# Return the category that appears most often in a variable.
+most_frequent <- function(x) {
+  observed <- x[!is.na(x)]
+  names(sort(table(observed), decreasing = TRUE))[1]
+}
+
+categorical_modes <- X_train_strat |>
+  summarise(across(all_of(categorical_features), most_frequent))
+
+# Apply the same missing-value rules to training and validation data.
+impute_data <- function(data) {
+  data |>
+    mutate(
+      across(
+        all_of(numeric_features),
+        ~ replace_na(.x, numeric_medians[[cur_column()]])
+      ),
+      across(
+        all_of(categorical_features),
+        ~ replace_na(.x, categorical_modes[[cur_column()]])
+      )
+    )
+}
+
+train_processed <- impute_data(X_train_strat)
+val_processed <- impute_data(X_val_strat)
+
+# Treat validation categories not seen during training as the training mode.
+for (column in categorical_features) {
+  training_values <- unique(train_processed[[column]])
+  val_processed[[column]][!val_processed[[column]] %in% training_values] <-
+    categorical_modes[[column]]
+
+  train_processed[[column]] <- factor(train_processed[[column]], levels = training_values)
+  val_processed[[column]] <- factor(val_processed[[column]], levels = training_values)
+}
+
+# Standardize numeric columns using training-set means and standard deviations.
+numeric_means <- train_processed |>
+  summarise(across(all_of(numeric_features), mean))
+
+numeric_sds <- train_processed |>
+  summarise(across(all_of(numeric_features), sd)) |>
+  mutate(across(everything(), ~ if_else(is.na(.x) | .x == 0, 1, .x)))
+
+standardize_data <- function(data) {
+# Subtract the training mean and divide by the training standard deviation.
+  data |>
+    mutate(
+      across(
+        all_of(numeric_features),
+        ~ (.x - numeric_means[[cur_column()]]) / numeric_sds[[cur_column()]]
+      )
+    )
+}
+
+train_processed <- standardize_data(train_processed)
+val_processed <- standardize_data(val_processed)
+
+# model.matrix converts categorical columns to 0/1 dummy variables.
+# Its default treatment coding leaves out one reference level per category.
+matrix_terms <- terms(~ ., data = train_processed)
+training_levels <- lapply(train_processed[categorical_features], levels)
+
+X_train_matrix <- model.matrix(
+  matrix_terms,
+  data = train_processed,
+  xlev = training_levels
+)
+
+X_val_matrix <- model.matrix(
+  matrix_terms,
+  data = val_processed,
+  xlev = training_levels
+)
+
+# Fit an ordinary logistic regression without weights, tuning, or resampling.
+baseline_fit <- glm.fit(
+  x = X_train_matrix,
+  y = y_train_strat,
+  family = binomial()
+)
+
+# A redundant column can have an undefined coefficient; it contributes zero.
+baseline_coefficients <- replace_na(baseline_fit$coefficients, 0)
+
+validation_probability <- as.vector(
+  plogis(X_val_matrix %*% baseline_coefficients)
+)
+
+# Use 0.50 as the cutoff for converting probabilities into class predictions.
+validation_prediction <- if_else(validation_probability >= 0.50, 1, 0)
+
+# Calculate the requested validation metrics.
+true_positive <- sum(validation_prediction == 1 & y_val_strat == 1)
+true_negative <- sum(validation_prediction == 0 & y_val_strat == 0)
+false_positive <- sum(validation_prediction == 1 & y_val_strat == 0)
+false_negative <- sum(validation_prediction == 0 & y_val_strat == 1)
+
+precision_value <- if_else(
+  true_positive + false_positive == 0,
+  0,
+  true_positive / (true_positive + false_positive)
+)
+
+recall_value <- true_positive / (true_positive + false_negative)
+f1_value <- if_else(
+  precision_value + recall_value == 0,
+  0,
+  2 * precision_value * recall_value / (precision_value + recall_value)
+)
+
+# The rank formula calculates ROC-AUC from predicted probabilities.
+positive_ranks <- sum(rank(validation_probability)[y_val_strat == 1])
+n_positive <- sum(y_val_strat == 1)
+n_negative <- sum(y_val_strat == 0)
+roc_auc_value <- (
+  positive_ranks - n_positive * (n_positive + 1) / 2
+) / (n_positive * n_negative)
+
+validation_metrics <- tibble(
+  metric = c("ROC-AUC", "Accuracy", "F1 score", "Precision", "Recall"),
+  estimate = c(
+    roc_auc_value,
+    mean(validation_prediction == y_val_strat),
+    f1_value,
+    precision_value,
+    recall_value
+  )
+)
+
+validation_confusion_matrix <- table(
+  Actual = factor(y_val_strat, levels = c(0, 1)),
+  Predicted = factor(validation_prediction, levels = c(0, 1))
+)
+
+# Display the final validation results in the rendered report.
+cat("Logistic regression baseline -- validation metrics\n")
+print(validation_metrics)
+cat("\nConfusion matrix\n")
+print(validation_confusion_matrix)
+```
