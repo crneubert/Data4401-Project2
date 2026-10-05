@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.40">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Home Credit Logistic Regression Baseline</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="logistic_regression_baseline_files/libs/clipboard/clipboard.min.js"></script>
+<script src="logistic_regression_baseline_files/libs/quarto-html/quarto.js"></script>
+<script src="logistic_regression_baseline_files/libs/quarto-html/popper.min.js"></script>
+<script src="logistic_regression_baseline_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="logistic_regression_baseline_files/libs/quarto-html/anchor.min.js"></script>
+<link href="logistic_regression_baseline_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="logistic_regression_baseline_files/libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="logistic_regression_baseline_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="logistic_regression_baseline_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="logistic_regression_baseline_files/libs/bootstrap/bootstrap-8a79a254b8e706d3c925cde0a310d4f0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Home Credit Logistic Regression Baseline</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check that the packages needed for this analysis are installed.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>required_packages <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"tidyverse"</span>, <span class="st">"googledrive"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>missing_packages <span class="ot">&lt;-</span> required_packages[<span class="sc">!</span><span class="fu">vapply</span>(required_packages, requireNamespace, <span class="fu">logical</span>(<span class="dv">1</span>), <span class="at">quietly =</span> <span class="cn">TRUE</span>)]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(missing_packages) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop</span>(</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Install these packages before running the document: "</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste</span>(missing_packages, <span class="at">collapse =</span> <span class="st">", "</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="load-the-home-credit-data-from-the-shared-google-drive" class="level2">
+<h2 class="anchored" data-anchor-id="load-the-home-credit-data-from-the-shared-google-drive">Load the Home Credit data from the shared Google Drive</h2>
+<p><code>load_table()</code> downloads each CSV only the first time it is used. Later runs read the cached copy. Call it with another table name, such as <code>load_table("bureau")</code>, when a history table is needed.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># These IDs tell R which files to download from the shared Google Drive.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>drive_file_ids <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">application_test =</span> <span class="st">"1aSCg7GlC4hluYPybtM00p9FzDWJHHtql"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">application_train =</span> <span class="st">"1leSsunoq4XyViBVgrZ0dCIEWQePWi_AV"</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">bureau =</span> <span class="st">"1XoTBbU-SMbjz2G8h12TxiZpjJIa-cZh_"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">bureau_balance =</span> <span class="st">"1vDQPrD5LEc3E4FFBrpLqWaPRq3ZRg4UP"</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">credit_card_balance =</span> <span class="st">"10gP4aVPjxhXt_uWanDNHeUV2HCA_j0Vp"</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">HomeCredit_columns_description =</span> <span class="st">"1z95kRXkg5bPPAenOFPnsE8pZwQcznCok"</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">installments_payments =</span> <span class="st">"19LEAwLvsJCOMuQ-GMmKNeQr8YNA4glVd"</span>,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">POS_CASH_balance =</span> <span class="st">"1_e2CfFcyrxki6j9KI5azFoQIP0EqlmYw"</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">previous_application =</span> <span class="st">"1UltfcT1hOhF3S8e0VKYFyeKR7DGzisOd"</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">sample_submission =</span> <span class="st">"1YNKdy7FL30LaeRLV7r1uyzQY6gOXJBFj"</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Save downloaded files in a local cache so they are not downloaded every time.</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>cache_root <span class="ot">&lt;-</span> <span class="fu">Sys.getenv</span>(<span class="st">"LOCALAPPDATA"</span>, <span class="at">unset =</span> tools<span class="sc">::</span><span class="fu">R_user_dir</span>(<span class="st">"data4401-project2"</span>, <span class="st">"cache"</span>))</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>data_dir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(cache_root, <span class="st">"data4401-project2"</span>, <span class="st">"home-credit-default-risk"</span>)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Download a table only when it is not already available in the cache.</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>load_table <span class="ot">&lt;-</span> <span class="cf">function</span>(name, ...) {</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>name <span class="sc">%in%</span> <span class="fu">names</span>(drive_file_ids)) {</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Unknown table: "</span>, name)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  csv_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(data_dir, <span class="fu">paste0</span>(name, <span class="st">".csv"</span>))</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(csv_path)) {</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dir.create</span>(data_dir, <span class="at">recursive =</span> <span class="cn">TRUE</span>, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    googledrive<span class="sc">::</span><span class="fu">drive_deauth</span>()</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    googledrive<span class="sc">::</span><span class="fu">drive_download</span>(</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>      <span class="at">file =</span> googledrive<span class="sc">::</span><span class="fu">as_id</span>(drive_file_ids[[name]]),</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>      <span class="at">path =</span> csv_path,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>      <span class="at">overwrite =</span> <span class="cn">FALSE</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  readr<span class="sc">::</span><span class="fu">read_csv</span>(csv_path, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>, ...)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the main training and competition test tables.</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>application_train <span class="ot">&lt;-</span> <span class="fu">load_table</span>(<span class="st">"application_train"</span>)</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>application_test <span class="ot">&lt;-</span> <span class="fu">load_table</span>(<span class="st">"application_test"</span>)</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Loaded train:"</span>, <span class="fu">nrow</span>(application_train), <span class="st">"rows x"</span>, <span class="fu">ncol</span>(application_train), <span class="st">"columns</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Loaded train: 307511 rows x 122 columns</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Loaded test:"</span>, <span class="fu">nrow</span>(application_test), <span class="st">"rows x"</span>, <span class="fu">ncol</span>(application_test), <span class="st">"columns</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Loaded test: 48744 rows x 121 columns</code></pre>
+</div>
+</div>
+</section>
+<section id="pre-processing" class="level1">
+<h1>Pre-Processing</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Preview the rows, variable types, and summary statistics.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(application_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 122
+  SK_ID_CURR TARGET NAME_CONTRACT_TYPE CODE_GENDER FLAG_OWN_CAR FLAG_OWN_REALTY
+       &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;              &lt;chr&gt;       &lt;chr&gt;        &lt;chr&gt;          
+1     100002      1 Cash loans         M           N            Y              
+2     100003      0 Cash loans         F           N            N              
+3     100004      0 Revolving loans    M           Y            Y              
+4     100006      0 Cash loans         F           N            Y              
+5     100007      0 Cash loans         M           N            Y              
+6     100008      0 Cash loans         M           N            Y              
+# ℹ 116 more variables: CNT_CHILDREN &lt;dbl&gt;, AMT_INCOME_TOTAL &lt;dbl&gt;,
+#   AMT_CREDIT &lt;dbl&gt;, AMT_ANNUITY &lt;dbl&gt;, AMT_GOODS_PRICE &lt;dbl&gt;,
+#   NAME_TYPE_SUITE &lt;chr&gt;, NAME_INCOME_TYPE &lt;chr&gt;, NAME_EDUCATION_TYPE &lt;chr&gt;,
+#   NAME_FAMILY_STATUS &lt;chr&gt;, NAME_HOUSING_TYPE &lt;chr&gt;,
+#   REGION_POPULATION_RELATIVE &lt;dbl&gt;, DAYS_BIRTH &lt;dbl&gt;, DAYS_EMPLOYED &lt;dbl&gt;,
+#   DAYS_REGISTRATION &lt;dbl&gt;, DAYS_ID_PUBLISH &lt;dbl&gt;, OWN_CAR_AGE &lt;dbl&gt;,
+#   FLAG_MOBIL &lt;dbl&gt;, FLAG_EMP_PHONE &lt;dbl&gt;, FLAG_WORK_PHONE &lt;dbl&gt;, …</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(application_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>spc_tbl_ [307,511 × 122] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+ $ SK_ID_CURR                  : num [1:307511] 1e+05 1e+05 1e+05 1e+05 1e+05 ...
+ $ TARGET                      : num [1:307511] 1 0 0 0 0 0 0 0 0 0 ...
+ $ NAME_CONTRACT_TYPE          : chr [1:307511] "Cash loans" "Cash loans" "Revolving loans" "Cash loans" ...
+ $ CODE_GENDER                 : chr [1:307511] "M" "F" "M" "F" ...
+ $ FLAG_OWN_CAR                : chr [1:307511] "N" "N" "Y" "N" ...
+ $ FLAG_OWN_REALTY             : chr [1:307511] "Y" "N" "Y" "Y" ...
+ $ CNT_CHILDREN                : num [1:307511] 0 0 0 0 0 0 1 0 0 0 ...
+ $ AMT_INCOME_TOTAL            : num [1:307511] 202500 270000 67500 135000 121500 ...
+ $ AMT_CREDIT                  : num [1:307511] 406598 1293503 135000 312683 513000 ...
+ $ AMT_ANNUITY                 : num [1:307511] 24701 35699 6750 29687 21866 ...
+ $ AMT_GOODS_PRICE             : num [1:307511] 351000 1129500 135000 297000 513000 ...
+ $ NAME_TYPE_SUITE             : chr [1:307511] "Unaccompanied" "Family" "Unaccompanied" "Unaccompanied" ...
+ $ NAME_INCOME_TYPE            : chr [1:307511] "Working" "State servant" "Working" "Working" ...
+ $ NAME_EDUCATION_TYPE         : chr [1:307511] "Secondary / secondary special" "Higher education" "Secondary / secondary special" "Secondary / secondary special" ...
+ $ NAME_FAMILY_STATUS          : chr [1:307511] "Single / not married" "Married" "Single / not married" "Civil marriage" ...
+ $ NAME_HOUSING_TYPE           : chr [1:307511] "House / apartment" "House / apartment" "House / apartment" "House / apartment" ...
+ $ REGION_POPULATION_RELATIVE  : num [1:307511] 0.0188 0.00354 0.01003 0.00802 0.02866 ...
+ $ DAYS_BIRTH                  : num [1:307511] -9461 -16765 -19046 -19005 -19932 ...
+ $ DAYS_EMPLOYED               : num [1:307511] -637 -1188 -225 -3039 -3038 ...
+ $ DAYS_REGISTRATION           : num [1:307511] -3648 -1186 -4260 -9833 -4311 ...
+ $ DAYS_ID_PUBLISH             : num [1:307511] -2120 -291 -2531 -2437 -3458 ...
+ $ OWN_CAR_AGE                 : num [1:307511] NA NA 26 NA NA NA 17 8 NA NA ...
+ $ FLAG_MOBIL                  : num [1:307511] 1 1 1 1 1 1 1 1 1 1 ...
+ $ FLAG_EMP_PHONE              : num [1:307511] 1 1 1 1 1 1 1 1 0 1 ...
+ $ FLAG_WORK_PHONE             : num [1:307511] 0 0 1 0 0 1 0 1 0 0 ...
+ $ FLAG_CONT_MOBILE            : num [1:307511] 1 1 1 1 1 1 1 1 1 1 ...
+ $ FLAG_PHONE                  : num [1:307511] 1 1 1 0 0 1 1 0 0 0 ...
+ $ FLAG_EMAIL                  : num [1:307511] 0 0 0 0 0 0 0 0 0 0 ...
+ $ OCCUPATION_TYPE             : chr [1:307511] "Laborers" "Core staff" "Laborers" "Laborers" ...
+ $ CNT_FAM_MEMBERS             : num [1:307511] 1 2 1 2 1 2 3 2 2 1 ...
+ $ REGION_RATING_CLIENT        : num [1:307511] 2 1 2 2 2 2 2 3 2 2 ...
+ $ REGION_RATING_CLIENT_W_CITY : num [1:307511] 2 1 2 2 2 2 2 3 2 2 ...
+ $ WEEKDAY_APPR_PROCESS_START  : chr [1:307511] "WEDNESDAY" "MONDAY" "MONDAY" "WEDNESDAY" ...
+ $ HOUR_APPR_PROCESS_START     : num [1:307511] 10 11 9 17 11 16 16 16 14 8 ...
+ $ REG_REGION_NOT_LIVE_REGION  : num [1:307511] 0 0 0 0 0 0 0 0 0 0 ...
+ $ REG_REGION_NOT_WORK_REGION  : num [1:307511] 0 0 0 0 0 0 0 0 0 0 ...
+ $ LIVE_REGION_NOT_WORK_REGION : num [1:307511] 0 0 0 0 0 0 0 0 0 0 ...
+ $ REG_CITY_NOT_LIVE_CITY      : num [1:307511] 0 0 0 0 0 0 0 0 0 0 ...
+ $ REG_CITY_NOT_WORK_CITY      : num [1:307511] 0 0 0 0 1 0 0 1 0 0 ...
+ $ LIVE_CITY_NOT_WORK_CITY     : num [1:307511] 0 0 0 0 1 0 0 1 0 0 ...
+ $ ORGANIZATION_TYPE           : chr [1:307511] "Business Entity Type 3" "School" "Government" "Business Entity Type 3" ...
+ $ EXT_SOURCE_1                : num [1:307511] 0.083 0.311 NA NA NA ...
+ $ EXT_SOURCE_2                : num [1:307511] 0.263 0.622 0.556 0.65 0.323 ...
+ $ EXT_SOURCE_3                : num [1:307511] 0.139 NA 0.73 NA NA ...
+ $ APARTMENTS_AVG              : num [1:307511] 0.0247 0.0959 NA NA NA NA NA NA NA NA ...
+ $ BASEMENTAREA_AVG            : num [1:307511] 0.0369 0.0529 NA NA NA NA NA NA NA NA ...
+ $ YEARS_BEGINEXPLUATATION_AVG : num [1:307511] 0.972 0.985 NA NA NA ...
+ $ YEARS_BUILD_AVG             : num [1:307511] 0.619 0.796 NA NA NA ...
+ $ COMMONAREA_AVG              : num [1:307511] 0.0143 0.0605 NA NA NA NA NA NA NA NA ...
+ $ ELEVATORS_AVG               : num [1:307511] 0 0.08 NA NA NA NA NA NA NA NA ...
+ $ ENTRANCES_AVG               : num [1:307511] 0.069 0.0345 NA NA NA NA NA NA NA NA ...
+ $ FLOORSMAX_AVG               : num [1:307511] 0.0833 0.2917 NA NA NA ...
+ $ FLOORSMIN_AVG               : num [1:307511] 0.125 0.333 NA NA NA ...
+ $ LANDAREA_AVG                : num [1:307511] 0.0369 0.013 NA NA NA NA NA NA NA NA ...
+ $ LIVINGAPARTMENTS_AVG        : num [1:307511] 0.0202 0.0773 NA NA NA NA NA NA NA NA ...
+ $ LIVINGAREA_AVG              : num [1:307511] 0.019 0.0549 NA NA NA NA NA NA NA NA ...
+ $ NONLIVINGAPARTMENTS_AVG     : num [1:307511] 0 0.0039 NA NA NA NA NA NA NA NA ...
+ $ NONLIVINGAREA_AVG           : num [1:307511] 0 0.0098 NA NA NA NA NA NA NA NA ...
+ $ APARTMENTS_MODE             : num [1:307511] 0.0252 0.0924 NA NA NA NA NA NA NA NA ...
+ $ BASEMENTAREA_MODE           : num [1:307511] 0.0383 0.0538 NA NA NA NA NA NA NA NA ...
+ $ YEARS_BEGINEXPLUATATION_MODE: num [1:307511] 0.972 0.985 NA NA NA ...
+ $ YEARS_BUILD_MODE            : num [1:307511] 0.634 0.804 NA NA NA ...
+ $ COMMONAREA_MODE             : num [1:307511] 0.0144 0.0497 NA NA NA NA NA NA NA NA ...
+ $ ELEVATORS_MODE              : num [1:307511] 0 0.0806 NA NA NA NA NA NA NA NA ...
+ $ ENTRANCES_MODE              : num [1:307511] 0.069 0.0345 NA NA NA NA NA NA NA NA ...
+ $ FLOORSMAX_MODE              : num [1:307511] 0.0833 0.2917 NA NA NA ...
+ $ FLOORSMIN_MODE              : num [1:307511] 0.125 0.333 NA NA NA ...
+ $ LANDAREA_MODE               : num [1:307511] 0.0377 0.0128 NA NA NA NA NA NA NA NA ...
+ $ LIVINGAPARTMENTS_MODE       : num [1:307511] 0.022 0.079 NA NA NA NA NA NA NA NA ...
+ $ LIVINGAREA_MODE             : num [1:307511] 0.0198 0.0554 NA NA NA NA NA NA NA NA ...
+ $ NONLIVINGAPARTMENTS_MODE    : num [1:307511] 0 0 NA NA NA NA NA NA NA NA ...
+ $ NONLIVINGAREA_MODE          : num [1:307511] 0 0 NA NA NA NA NA NA NA NA ...
+ $ APARTMENTS_MEDI             : num [1:307511] 0.025 0.0968 NA NA NA NA NA NA NA NA ...
+ $ BASEMENTAREA_MEDI           : num [1:307511] 0.0369 0.0529 NA NA NA NA NA NA NA NA ...
+ $ YEARS_BEGINEXPLUATATION_MEDI: num [1:307511] 0.972 0.985 NA NA NA ...
+ $ YEARS_BUILD_MEDI            : num [1:307511] 0.624 0.799 NA NA NA ...
+ $ COMMONAREA_MEDI             : num [1:307511] 0.0144 0.0608 NA NA NA NA NA NA NA NA ...
+ $ ELEVATORS_MEDI              : num [1:307511] 0 0.08 NA NA NA NA NA NA NA NA ...
+ $ ENTRANCES_MEDI              : num [1:307511] 0.069 0.0345 NA NA NA NA NA NA NA NA ...
+ $ FLOORSMAX_MEDI              : num [1:307511] 0.0833 0.2917 NA NA NA ...
+ $ FLOORSMIN_MEDI              : num [1:307511] 0.125 0.333 NA NA NA ...
+ $ LANDAREA_MEDI               : num [1:307511] 0.0375 0.0132 NA NA NA NA NA NA NA NA ...
+ $ LIVINGAPARTMENTS_MEDI       : num [1:307511] 0.0205 0.0787 NA NA NA NA NA NA NA NA ...
+ $ LIVINGAREA_MEDI             : num [1:307511] 0.0193 0.0558 NA NA NA NA NA NA NA NA ...
+ $ NONLIVINGAPARTMENTS_MEDI    : num [1:307511] 0 0.0039 NA NA NA NA NA NA NA NA ...
+ $ NONLIVINGAREA_MEDI          : num [1:307511] 0 0.01 NA NA NA NA NA NA NA NA ...
+ $ FONDKAPREMONT_MODE          : chr [1:307511] "reg oper account" "reg oper account" NA NA ...
+ $ HOUSETYPE_MODE              : chr [1:307511] "block of flats" "block of flats" NA NA ...
+ $ TOTALAREA_MODE              : num [1:307511] 0.0149 0.0714 NA NA NA NA NA NA NA NA ...
+ $ WALLSMATERIAL_MODE          : chr [1:307511] "Stone, brick" "Block" NA NA ...
+ $ EMERGENCYSTATE_MODE         : chr [1:307511] "No" "No" NA NA ...
+ $ OBS_30_CNT_SOCIAL_CIRCLE    : num [1:307511] 2 1 0 2 0 0 1 2 1 2 ...
+ $ DEF_30_CNT_SOCIAL_CIRCLE    : num [1:307511] 2 0 0 0 0 0 0 0 0 0 ...
+ $ OBS_60_CNT_SOCIAL_CIRCLE    : num [1:307511] 2 1 0 2 0 0 1 2 1 2 ...
+ $ DEF_60_CNT_SOCIAL_CIRCLE    : num [1:307511] 2 0 0 0 0 0 0 0 0 0 ...
+ $ DAYS_LAST_PHONE_CHANGE      : num [1:307511] -1134 -828 -815 -617 -1106 ...
+ $ FLAG_DOCUMENT_2             : num [1:307511] 0 0 0 0 0 0 0 0 0 0 ...
+ $ FLAG_DOCUMENT_3             : num [1:307511] 1 1 0 1 0 1 0 1 1 0 ...
+ $ FLAG_DOCUMENT_4             : num [1:307511] 0 0 0 0 0 0 0 0 0 0 ...
+  [list output truncated]
+ - attr(*, "spec")=
+  .. cols(
+  ..   SK_ID_CURR = col_double(),
+  ..   TARGET = col_double(),
+  ..   NAME_CONTRACT_TYPE = col_character(),
+  ..   CODE_GENDER = col_character(),
+  ..   FLAG_OWN_CAR = col_character(),
+  ..   FLAG_OWN_REALTY = col_character(),
+  ..   CNT_CHILDREN = col_double(),
+  ..   AMT_INCOME_TOTAL = col_double(),
+  ..   AMT_CREDIT = col_double(),
+  ..   AMT_ANNUITY = col_double(),
+  ..   AMT_GOODS_PRICE = col_double(),
+  ..   NAME_TYPE_SUITE = col_character(),
+  ..   NAME_INCOME_TYPE = col_character(),
+  ..   NAME_EDUCATION_TYPE = col_character(),
+  ..   NAME_FAMILY_STATUS = col_character(),
+  ..   NAME_HOUSING_TYPE = col_character(),
+  ..   REGION_POPULATION_RELATIVE = col_double(),
+  ..   DAYS_BIRTH = col_double(),
+  ..   DAYS_EMPLOYED = col_double(),
+  ..   DAYS_REGISTRATION = col_double(),
+  ..   DAYS_ID_PUBLISH = col_double(),
+  ..   OWN_CAR_AGE = col_double(),
+  ..   FLAG_MOBIL = col_double(),
+  ..   FLAG_EMP_PHONE = col_double(),
+  ..   FLAG_WORK_PHONE = col_double(),
+  ..   FLAG_CONT_MOBILE = col_double(),
+  ..   FLAG_PHONE = col_double(),
+  ..   FLAG_EMAIL = col_double(),
+  ..   OCCUPATION_TYPE = col_character(),
+  ..   CNT_FAM_MEMBERS = col_double(),
+  ..   REGION_RATING_CLIENT = col_double(),
+  ..   REGION_RATING_CLIENT_W_CITY = col_double(),
+  ..   WEEKDAY_APPR_PROCESS_START = col_character(),
+  ..   HOUR_APPR_PROCESS_START = col_double(),
+  ..   REG_REGION_NOT_LIVE_REGION = col_double(),
+  ..   REG_REGION_NOT_WORK_REGION = col_double(),
+  ..   LIVE_REGION_NOT_WORK_REGION = col_double(),
+  ..   REG_CITY_NOT_LIVE_CITY = col_double(),
+  ..   REG_CITY_NOT_WORK_CITY = col_double(),
+  ..   LIVE_CITY_NOT_WORK_CITY = col_double(),
+  ..   ORGANIZATION_TYPE = col_character(),
+  ..   EXT_SOURCE_1 = col_double(),
+  ..   EXT_SOURCE_2 = col_double(),
+  ..   EXT_SOURCE_3 = col_double(),
+  ..   APARTMENTS_AVG = col_double(),
+  ..   BASEMENTAREA_AVG = col_double(),
+  ..   YEARS_BEGINEXPLUATATION_AVG = col_double(),
+  ..   YEARS_BUILD_AVG = col_double(),
+  ..   COMMONAREA_AVG = col_double(),
+  ..   ELEVATORS_AVG = col_double(),
+  ..   ENTRANCES_AVG = col_double(),
+  ..   FLOORSMAX_AVG = col_double(),
+  ..   FLOORSMIN_AVG = col_double(),
+  ..   LANDAREA_AVG = col_double(),
+  ..   LIVINGAPARTMENTS_AVG = col_double(),
+  ..   LIVINGAREA_AVG = col_double(),
+  ..   NONLIVINGAPARTMENTS_AVG = col_double(),
+  ..   NONLIVINGAREA_AVG = col_double(),
+  ..   APARTMENTS_MODE = col_double(),
+  ..   BASEMENTAREA_MODE = col_double(),
+  ..   YEARS_BEGINEXPLUATATION_MODE = col_double(),
+  ..   YEARS_BUILD_MODE = col_double(),
+  ..   COMMONAREA_MODE = col_double(),
+  ..   ELEVATORS_MODE = col_double(),
+  ..   ENTRANCES_MODE = col_double(),
+  ..   FLOORSMAX_MODE = col_double(),
+  ..   FLOORSMIN_MODE = col_double(),
+  ..   LANDAREA_MODE = col_double(),
+  ..   LIVINGAPARTMENTS_MODE = col_double(),
+  ..   LIVINGAREA_MODE = col_double(),
+  ..   NONLIVINGAPARTMENTS_MODE = col_double(),
+  ..   NONLIVINGAREA_MODE = col_double(),
+  ..   APARTMENTS_MEDI = col_double(),
+  ..   BASEMENTAREA_MEDI = col_double(),
+  ..   YEARS_BEGINEXPLUATATION_MEDI = col_double(),
+  ..   YEARS_BUILD_MEDI = col_double(),
+  ..   COMMONAREA_MEDI = col_double(),
+  ..   ELEVATORS_MEDI = col_double(),
+  ..   ENTRANCES_MEDI = col_double(),
+  ..   FLOORSMAX_MEDI = col_double(),
+  ..   FLOORSMIN_MEDI = col_double(),
+  ..   LANDAREA_MEDI = col_double(),
+  ..   LIVINGAPARTMENTS_MEDI = col_double(),
+  ..   LIVINGAREA_MEDI = col_double(),
+  ..   NONLIVINGAPARTMENTS_MEDI = col_double(),
+  ..   NONLIVINGAREA_MEDI = col_double(),
+  ..   FONDKAPREMONT_MODE = col_character(),
+  ..   HOUSETYPE_MODE = col_character(),
+  ..   TOTALAREA_MODE = col_double(),
+  ..   WALLSMATERIAL_MODE = col_character(),
+  ..   EMERGENCYSTATE_MODE = col_character(),
+  ..   OBS_30_CNT_SOCIAL_CIRCLE = col_double(),
+  ..   DEF_30_CNT_SOCIAL_CIRCLE = col_double(),
+  ..   OBS_60_CNT_SOCIAL_CIRCLE = col_double(),
+  ..   DEF_60_CNT_SOCIAL_CIRCLE = col_double(),
+  ..   DAYS_LAST_PHONE_CHANGE = col_double(),
+  ..   FLAG_DOCUMENT_2 = col_double(),
+  ..   FLAG_DOCUMENT_3 = col_double(),
+  ..   FLAG_DOCUMENT_4 = col_double(),
+  ..   FLAG_DOCUMENT_5 = col_double(),
+  ..   FLAG_DOCUMENT_6 = col_double(),
+  ..   FLAG_DOCUMENT_7 = col_double(),
+  ..   FLAG_DOCUMENT_8 = col_double(),
+  ..   FLAG_DOCUMENT_9 = col_double(),
+  ..   FLAG_DOCUMENT_10 = col_double(),
+  ..   FLAG_DOCUMENT_11 = col_double(),
+  ..   FLAG_DOCUMENT_12 = col_double(),
+  ..   FLAG_DOCUMENT_13 = col_double(),
+  ..   FLAG_DOCUMENT_14 = col_double(),
+  ..   FLAG_DOCUMENT_15 = col_double(),
+  ..   FLAG_DOCUMENT_16 = col_double(),
+  ..   FLAG_DOCUMENT_17 = col_double(),
+  ..   FLAG_DOCUMENT_18 = col_double(),
+  ..   FLAG_DOCUMENT_19 = col_double(),
+  ..   FLAG_DOCUMENT_20 = col_double(),
+  ..   FLAG_DOCUMENT_21 = col_double(),
+  ..   AMT_REQ_CREDIT_BUREAU_HOUR = col_double(),
+  ..   AMT_REQ_CREDIT_BUREAU_DAY = col_double(),
+  ..   AMT_REQ_CREDIT_BUREAU_WEEK = col_double(),
+  ..   AMT_REQ_CREDIT_BUREAU_MON = col_double(),
+  ..   AMT_REQ_CREDIT_BUREAU_QRT = col_double(),
+  ..   AMT_REQ_CREDIT_BUREAU_YEAR = col_double()
+  .. )
+ - attr(*, "problems")=&lt;externalptr&gt; </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(application_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   SK_ID_CURR         TARGET        NAME_CONTRACT_TYPE CODE_GENDER       
+ Min.   :100002   Min.   :0.00000   Length:307511      Length:307511     
+ 1st Qu.:189146   1st Qu.:0.00000   Class :character   Class :character  
+ Median :278202   Median :0.00000   Mode  :character   Mode  :character  
+ Mean   :278181   Mean   :0.08073                                        
+ 3rd Qu.:367143   3rd Qu.:0.00000                                        
+ Max.   :456255   Max.   :1.00000                                        
+                                                                         
+ FLAG_OWN_CAR       FLAG_OWN_REALTY     CNT_CHILDREN     AMT_INCOME_TOTAL   
+ Length:307511      Length:307511      Min.   : 0.0000   Min.   :    25650  
+ Class :character   Class :character   1st Qu.: 0.0000   1st Qu.:   112500  
+ Mode  :character   Mode  :character   Median : 0.0000   Median :   147150  
+                                       Mean   : 0.4171   Mean   :   168798  
+                                       3rd Qu.: 1.0000   3rd Qu.:   202500  
+                                       Max.   :19.0000   Max.   :117000000  
+                                                                            
+   AMT_CREDIT       AMT_ANNUITY     AMT_GOODS_PRICE   NAME_TYPE_SUITE   
+ Min.   :  45000   Min.   :  1616   Min.   :  40500   Length:307511     
+ 1st Qu.: 270000   1st Qu.: 16524   1st Qu.: 238500   Class :character  
+ Median : 513531   Median : 24903   Median : 450000   Mode  :character  
+ Mean   : 599026   Mean   : 27109   Mean   : 538396                     
+ 3rd Qu.: 808650   3rd Qu.: 34596   3rd Qu.: 679500                     
+ Max.   :4050000   Max.   :258026   Max.   :4050000                     
+                   NA's   :12       NA's   :278                         
+ NAME_INCOME_TYPE   NAME_EDUCATION_TYPE NAME_FAMILY_STATUS NAME_HOUSING_TYPE 
+ Length:307511      Length:307511       Length:307511      Length:307511     
+ Class :character   Class :character    Class :character   Class :character  
+ Mode  :character   Mode  :character    Mode  :character   Mode  :character  
+                                                                             
+                                                                             
+                                                                             
+                                                                             
+ REGION_POPULATION_RELATIVE   DAYS_BIRTH     DAYS_EMPLOYED    DAYS_REGISTRATION
+ Min.   :0.00029            Min.   :-25229   Min.   :-17912   Min.   :-24672   
+ 1st Qu.:0.01001            1st Qu.:-19682   1st Qu.: -2760   1st Qu.: -7480   
+ Median :0.01885            Median :-15750   Median : -1213   Median : -4504   
+ Mean   :0.02087            Mean   :-16037   Mean   : 63815   Mean   : -4986   
+ 3rd Qu.:0.02866            3rd Qu.:-12413   3rd Qu.:  -289   3rd Qu.: -2010   
+ Max.   :0.07251            Max.   : -7489   Max.   :365243   Max.   :     0   
+                                                                               
+ DAYS_ID_PUBLISH  OWN_CAR_AGE       FLAG_MOBIL FLAG_EMP_PHONE  
+ Min.   :-7197   Min.   : 0.00    Min.   :0    Min.   :0.0000  
+ 1st Qu.:-4299   1st Qu.: 5.00    1st Qu.:1    1st Qu.:1.0000  
+ Median :-3254   Median : 9.00    Median :1    Median :1.0000  
+ Mean   :-2994   Mean   :12.06    Mean   :1    Mean   :0.8199  
+ 3rd Qu.:-1720   3rd Qu.:15.00    3rd Qu.:1    3rd Qu.:1.0000  
+ Max.   :    0   Max.   :91.00    Max.   :1    Max.   :1.0000  
+                 NA's   :202929                                
+ FLAG_WORK_PHONE  FLAG_CONT_MOBILE   FLAG_PHONE       FLAG_EMAIL     
+ Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.00000  
+ 1st Qu.:0.0000   1st Qu.:1.0000   1st Qu.:0.0000   1st Qu.:0.00000  
+ Median :0.0000   Median :1.0000   Median :0.0000   Median :0.00000  
+ Mean   :0.1994   Mean   :0.9981   Mean   :0.2811   Mean   :0.05672  
+ 3rd Qu.:0.0000   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:0.00000  
+ Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.00000  
+                                                                     
+ OCCUPATION_TYPE    CNT_FAM_MEMBERS  REGION_RATING_CLIENT
+ Length:307511      Min.   : 1.000   Min.   :1.000       
+ Class :character   1st Qu.: 2.000   1st Qu.:2.000       
+ Mode  :character   Median : 2.000   Median :2.000       
+                    Mean   : 2.153   Mean   :2.052       
+                    3rd Qu.: 3.000   3rd Qu.:2.000       
+                    Max.   :20.000   Max.   :3.000       
+                    NA's   :2                            
+ REGION_RATING_CLIENT_W_CITY WEEKDAY_APPR_PROCESS_START HOUR_APPR_PROCESS_START
+ Min.   :1.000               Length:307511              Min.   : 0.00          
+ 1st Qu.:2.000               Class :character           1st Qu.:10.00          
+ Median :2.000               Mode  :character           Median :12.00          
+ Mean   :2.032                                          Mean   :12.06          
+ 3rd Qu.:2.000                                          3rd Qu.:14.00          
+ Max.   :3.000                                          Max.   :23.00          
+                                                                               
+ REG_REGION_NOT_LIVE_REGION REG_REGION_NOT_WORK_REGION
+ Min.   :0.00000            Min.   :0.00000           
+ 1st Qu.:0.00000            1st Qu.:0.00000           
+ Median :0.00000            Median :0.00000           
+ Mean   :0.01514            Mean   :0.05077           
+ 3rd Qu.:0.00000            3rd Qu.:0.00000           
+ Max.   :1.00000            Max.   :1.00000           
+                                                      
+ LIVE_REGION_NOT_WORK_REGION REG_CITY_NOT_LIVE_CITY REG_CITY_NOT_WORK_CITY
+ Min.   :0.00000             Min.   :0.00000        Min.   :0.0000        
+ 1st Qu.:0.00000             1st Qu.:0.00000        1st Qu.:0.0000        
+ Median :0.00000             Median :0.00000        Median :0.0000        
+ Mean   :0.04066             Mean   :0.07817        Mean   :0.2305        
+ 3rd Qu.:0.00000             3rd Qu.:0.00000        3rd Qu.:0.0000        
+ Max.   :1.00000             Max.   :1.00000        Max.   :1.0000        
+                                                                          
+ LIVE_CITY_NOT_WORK_CITY ORGANIZATION_TYPE   EXT_SOURCE_1     EXT_SOURCE_2   
+ Min.   :0.0000          Length:307511      Min.   :0.01     Min.   :0.0000  
+ 1st Qu.:0.0000          Class :character   1st Qu.:0.33     1st Qu.:0.3925  
+ Median :0.0000          Mode  :character   Median :0.51     Median :0.5660  
+ Mean   :0.1796                             Mean   :0.50     Mean   :0.5144  
+ 3rd Qu.:0.0000                             3rd Qu.:0.68     3rd Qu.:0.6636  
+ Max.   :1.0000                             Max.   :0.96     Max.   :0.8550  
+                                            NA's   :173378   NA's   :660     
+  EXT_SOURCE_3   APARTMENTS_AVG   BASEMENTAREA_AVG YEARS_BEGINEXPLUATATION_AVG
+ Min.   :0.00    Min.   :0.00     Min.   :0.00     Min.   :0.00               
+ 1st Qu.:0.37    1st Qu.:0.06     1st Qu.:0.04     1st Qu.:0.98               
+ Median :0.54    Median :0.09     Median :0.08     Median :0.98               
+ Mean   :0.51    Mean   :0.12     Mean   :0.09     Mean   :0.98               
+ 3rd Qu.:0.67    3rd Qu.:0.15     3rd Qu.:0.11     3rd Qu.:0.99               
+ Max.   :0.90    Max.   :1.00     Max.   :1.00     Max.   :1.00               
+ NA's   :60965   NA's   :156061   NA's   :179943   NA's   :150007             
+ YEARS_BUILD_AVG  COMMONAREA_AVG   ELEVATORS_AVG    ENTRANCES_AVG   
+ Min.   :0.00     Min.   :0.00     Min.   :0.00     Min.   :0.00    
+ 1st Qu.:0.69     1st Qu.:0.01     1st Qu.:0.00     1st Qu.:0.07    
+ Median :0.76     Median :0.02     Median :0.00     Median :0.14    
+ Mean   :0.75     Mean   :0.04     Mean   :0.08     Mean   :0.15    
+ 3rd Qu.:0.82     3rd Qu.:0.05     3rd Qu.:0.12     3rd Qu.:0.21    
+ Max.   :1.00     Max.   :1.00     Max.   :1.00     Max.   :1.00    
+ NA's   :204488   NA's   :214865   NA's   :163891   NA's   :154828  
+ FLOORSMAX_AVG    FLOORSMIN_AVG     LANDAREA_AVG    LIVINGAPARTMENTS_AVG
+ Min.   :0.00     Min.   :0.00     Min.   :0.00     Min.   :0.00        
+ 1st Qu.:0.17     1st Qu.:0.08     1st Qu.:0.02     1st Qu.:0.05        
+ Median :0.17     Median :0.21     Median :0.05     Median :0.08        
+ Mean   :0.23     Mean   :0.23     Mean   :0.07     Mean   :0.10        
+ 3rd Qu.:0.33     3rd Qu.:0.38     3rd Qu.:0.09     3rd Qu.:0.12        
+ Max.   :1.00     Max.   :1.00     Max.   :1.00     Max.   :1.00        
+ NA's   :153020   NA's   :208642   NA's   :182590   NA's   :210199      
+ LIVINGAREA_AVG   NONLIVINGAPARTMENTS_AVG NONLIVINGAREA_AVG APARTMENTS_MODE 
+ Min.   :0.00     Min.   :0.00            Min.   :0.00      Min.   :0.00    
+ 1st Qu.:0.05     1st Qu.:0.00            1st Qu.:0.00      1st Qu.:0.05    
+ Median :0.07     Median :0.00            Median :0.00      Median :0.08    
+ Mean   :0.11     Mean   :0.01            Mean   :0.03      Mean   :0.11    
+ 3rd Qu.:0.13     3rd Qu.:0.00            3rd Qu.:0.03      3rd Qu.:0.14    
+ Max.   :1.00     Max.   :1.00            Max.   :1.00      Max.   :1.00    
+ NA's   :154350   NA's   :213514          NA's   :169682    NA's   :156061  
+ BASEMENTAREA_MODE YEARS_BEGINEXPLUATATION_MODE YEARS_BUILD_MODE
+ Min.   :0.00      Min.   :0.00                 Min.   :0.00    
+ 1st Qu.:0.04      1st Qu.:0.98                 1st Qu.:0.70    
+ Median :0.07      Median :0.98                 Median :0.76    
+ Mean   :0.09      Mean   :0.98                 Mean   :0.76    
+ 3rd Qu.:0.11      3rd Qu.:0.99                 3rd Qu.:0.82    
+ Max.   :1.00      Max.   :1.00                 Max.   :1.00    
+ NA's   :179943    NA's   :150007               NA's   :204488  
+ COMMONAREA_MODE  ELEVATORS_MODE   ENTRANCES_MODE   FLOORSMAX_MODE  
+ Min.   :0.00     Min.   :0.00     Min.   :0.00     Min.   :0.00    
+ 1st Qu.:0.01     1st Qu.:0.00     1st Qu.:0.07     1st Qu.:0.17    
+ Median :0.02     Median :0.00     Median :0.14     Median :0.17    
+ Mean   :0.04     Mean   :0.07     Mean   :0.15     Mean   :0.22    
+ 3rd Qu.:0.05     3rd Qu.:0.12     3rd Qu.:0.21     3rd Qu.:0.33    
+ Max.   :1.00     Max.   :1.00     Max.   :1.00     Max.   :1.00    
+ NA's   :214865   NA's   :163891   NA's   :154828   NA's   :153020  
+ FLOORSMIN_MODE   LANDAREA_MODE    LIVINGAPARTMENTS_MODE LIVINGAREA_MODE 
+ Min.   :0.00     Min.   :0.00     Min.   :0.00          Min.   :0.00    
+ 1st Qu.:0.08     1st Qu.:0.02     1st Qu.:0.05          1st Qu.:0.04    
+ Median :0.21     Median :0.05     Median :0.08          Median :0.07    
+ Mean   :0.23     Mean   :0.06     Mean   :0.11          Mean   :0.11    
+ 3rd Qu.:0.38     3rd Qu.:0.08     3rd Qu.:0.13          3rd Qu.:0.13    
+ Max.   :1.00     Max.   :1.00     Max.   :1.00          Max.   :1.00    
+ NA's   :208642   NA's   :182590   NA's   :210199        NA's   :154350  
+ NONLIVINGAPARTMENTS_MODE NONLIVINGAREA_MODE APARTMENTS_MEDI  BASEMENTAREA_MEDI
+ Min.   :0.00             Min.   :0.00       Min.   :0.00     Min.   :0.00     
+ 1st Qu.:0.00             1st Qu.:0.00       1st Qu.:0.06     1st Qu.:0.04     
+ Median :0.00             Median :0.00       Median :0.09     Median :0.08     
+ Mean   :0.01             Mean   :0.03       Mean   :0.12     Mean   :0.09     
+ 3rd Qu.:0.00             3rd Qu.:0.02       3rd Qu.:0.15     3rd Qu.:0.11     
+ Max.   :1.00             Max.   :1.00       Max.   :1.00     Max.   :1.00     
+ NA's   :213514           NA's   :169682     NA's   :156061   NA's   :179943   
+ YEARS_BEGINEXPLUATATION_MEDI YEARS_BUILD_MEDI COMMONAREA_MEDI 
+ Min.   :0.00                 Min.   :0.00     Min.   :0.00    
+ 1st Qu.:0.98                 1st Qu.:0.69     1st Qu.:0.01    
+ Median :0.98                 Median :0.76     Median :0.02    
+ Mean   :0.98                 Mean   :0.76     Mean   :0.04    
+ 3rd Qu.:0.99                 3rd Qu.:0.83     3rd Qu.:0.05    
+ Max.   :1.00                 Max.   :1.00     Max.   :1.00    
+ NA's   :150007               NA's   :204488   NA's   :214865  
+ ELEVATORS_MEDI   ENTRANCES_MEDI   FLOORSMAX_MEDI   FLOORSMIN_MEDI  
+ Min.   :0.00     Min.   :0.00     Min.   :0.00     Min.   :0.00    
+ 1st Qu.:0.00     1st Qu.:0.07     1st Qu.:0.17     1st Qu.:0.08    
+ Median :0.00     Median :0.14     Median :0.17     Median :0.21    
+ Mean   :0.08     Mean   :0.15     Mean   :0.23     Mean   :0.23    
+ 3rd Qu.:0.12     3rd Qu.:0.21     3rd Qu.:0.33     3rd Qu.:0.38    
+ Max.   :1.00     Max.   :1.00     Max.   :1.00     Max.   :1.00    
+ NA's   :163891   NA's   :154828   NA's   :153020   NA's   :208642  
+ LANDAREA_MEDI    LIVINGAPARTMENTS_MEDI LIVINGAREA_MEDI 
+ Min.   :0.00     Min.   :0.00          Min.   :0.00    
+ 1st Qu.:0.02     1st Qu.:0.05          1st Qu.:0.05    
+ Median :0.05     Median :0.08          Median :0.07    
+ Mean   :0.07     Mean   :0.10          Mean   :0.11    
+ 3rd Qu.:0.09     3rd Qu.:0.12          3rd Qu.:0.13    
+ Max.   :1.00     Max.   :1.00          Max.   :1.00    
+ NA's   :182590   NA's   :210199        NA's   :154350  
+ NONLIVINGAPARTMENTS_MEDI NONLIVINGAREA_MEDI FONDKAPREMONT_MODE
+ Min.   :0.00             Min.   :0.00       Length:307511     
+ 1st Qu.:0.00             1st Qu.:0.00       Class :character  
+ Median :0.00             Median :0.00       Mode  :character  
+ Mean   :0.01             Mean   :0.03                         
+ 3rd Qu.:0.00             3rd Qu.:0.03                         
+ Max.   :1.00             Max.   :1.00                         
+ NA's   :213514           NA's   :169682                       
+ HOUSETYPE_MODE     TOTALAREA_MODE   WALLSMATERIAL_MODE EMERGENCYSTATE_MODE
+ Length:307511      Min.   :0.00     Length:307511      Length:307511      
+ Class :character   1st Qu.:0.04     Class :character   Class :character   
+ Mode  :character   Median :0.07     Mode  :character   Mode  :character   
+                    Mean   :0.10                                           
+                    3rd Qu.:0.13                                           
+                    Max.   :1.00                                           
+                    NA's   :148431                                         
+ OBS_30_CNT_SOCIAL_CIRCLE DEF_30_CNT_SOCIAL_CIRCLE OBS_60_CNT_SOCIAL_CIRCLE
+ Min.   :  0.000          Min.   : 0.0000          Min.   :  0.000         
+ 1st Qu.:  0.000          1st Qu.: 0.0000          1st Qu.:  0.000         
+ Median :  0.000          Median : 0.0000          Median :  0.000         
+ Mean   :  1.422          Mean   : 0.1434          Mean   :  1.405         
+ 3rd Qu.:  2.000          3rd Qu.: 0.0000          3rd Qu.:  2.000         
+ Max.   :348.000          Max.   :34.0000          Max.   :344.000         
+ NA's   :1021             NA's   :1021             NA's   :1021            
+ DEF_60_CNT_SOCIAL_CIRCLE DAYS_LAST_PHONE_CHANGE FLAG_DOCUMENT_2   
+ Min.   : 0.0             Min.   :-4292.0        Min.   :0.00e+00  
+ 1st Qu.: 0.0             1st Qu.:-1570.0        1st Qu.:0.00e+00  
+ Median : 0.0             Median : -757.0        Median :0.00e+00  
+ Mean   : 0.1             Mean   : -962.9        Mean   :4.23e-05  
+ 3rd Qu.: 0.0             3rd Qu.: -274.0        3rd Qu.:0.00e+00  
+ Max.   :24.0             Max.   :    0.0        Max.   :1.00e+00  
+ NA's   :1021             NA's   :1                                
+ FLAG_DOCUMENT_3 FLAG_DOCUMENT_4    FLAG_DOCUMENT_5   FLAG_DOCUMENT_6  
+ Min.   :0.00    Min.   :0.00e+00   Min.   :0.00000   Min.   :0.00000  
+ 1st Qu.:0.00    1st Qu.:0.00e+00   1st Qu.:0.00000   1st Qu.:0.00000  
+ Median :1.00    Median :0.00e+00   Median :0.00000   Median :0.00000  
+ Mean   :0.71    Mean   :8.13e-05   Mean   :0.01511   Mean   :0.08806  
+ 3rd Qu.:1.00    3rd Qu.:0.00e+00   3rd Qu.:0.00000   3rd Qu.:0.00000  
+ Max.   :1.00    Max.   :1.00e+00   Max.   :1.00000   Max.   :1.00000  
+                                                                       
+ FLAG_DOCUMENT_7     FLAG_DOCUMENT_8   FLAG_DOCUMENT_9    FLAG_DOCUMENT_10  
+ Min.   :0.0000000   Min.   :0.00000   Min.   :0.000000   Min.   :0.00e+00  
+ 1st Qu.:0.0000000   1st Qu.:0.00000   1st Qu.:0.000000   1st Qu.:0.00e+00  
+ Median :0.0000000   Median :0.00000   Median :0.000000   Median :0.00e+00  
+ Mean   :0.0001919   Mean   :0.08138   Mean   :0.003896   Mean   :2.28e-05  
+ 3rd Qu.:0.0000000   3rd Qu.:0.00000   3rd Qu.:0.000000   3rd Qu.:0.00e+00  
+ Max.   :1.0000000   Max.   :1.00000   Max.   :1.000000   Max.   :1.00e+00  
+                                                                            
+ FLAG_DOCUMENT_11   FLAG_DOCUMENT_12  FLAG_DOCUMENT_13   FLAG_DOCUMENT_14  
+ Min.   :0.000000   Min.   :0.0e+00   Min.   :0.000000   Min.   :0.000000  
+ 1st Qu.:0.000000   1st Qu.:0.0e+00   1st Qu.:0.000000   1st Qu.:0.000000  
+ Median :0.000000   Median :0.0e+00   Median :0.000000   Median :0.000000  
+ Mean   :0.003912   Mean   :6.5e-06   Mean   :0.003525   Mean   :0.002936  
+ 3rd Qu.:0.000000   3rd Qu.:0.0e+00   3rd Qu.:0.000000   3rd Qu.:0.000000  
+ Max.   :1.000000   Max.   :1.0e+00   Max.   :1.000000   Max.   :1.000000  
+                                                                           
+ FLAG_DOCUMENT_15  FLAG_DOCUMENT_16   FLAG_DOCUMENT_17    FLAG_DOCUMENT_18 
+ Min.   :0.00000   Min.   :0.000000   Min.   :0.0000000   Min.   :0.00000  
+ 1st Qu.:0.00000   1st Qu.:0.000000   1st Qu.:0.0000000   1st Qu.:0.00000  
+ Median :0.00000   Median :0.000000   Median :0.0000000   Median :0.00000  
+ Mean   :0.00121   Mean   :0.009928   Mean   :0.0002667   Mean   :0.00813  
+ 3rd Qu.:0.00000   3rd Qu.:0.000000   3rd Qu.:0.0000000   3rd Qu.:0.00000  
+ Max.   :1.00000   Max.   :1.000000   Max.   :1.0000000   Max.   :1.00000  
+                                                                           
+ FLAG_DOCUMENT_19    FLAG_DOCUMENT_20    FLAG_DOCUMENT_21   
+ Min.   :0.0000000   Min.   :0.0000000   Min.   :0.0000000  
+ 1st Qu.:0.0000000   1st Qu.:0.0000000   1st Qu.:0.0000000  
+ Median :0.0000000   Median :0.0000000   Median :0.0000000  
+ Mean   :0.0005951   Mean   :0.0005073   Mean   :0.0003349  
+ 3rd Qu.:0.0000000   3rd Qu.:0.0000000   3rd Qu.:0.0000000  
+ Max.   :1.0000000   Max.   :1.0000000   Max.   :1.0000000  
+                                                            
+ AMT_REQ_CREDIT_BUREAU_HOUR AMT_REQ_CREDIT_BUREAU_DAY
+ Min.   :0.00               Min.   :0.00             
+ 1st Qu.:0.00               1st Qu.:0.00             
+ Median :0.00               Median :0.00             
+ Mean   :0.01               Mean   :0.01             
+ 3rd Qu.:0.00               3rd Qu.:0.00             
+ Max.   :4.00               Max.   :9.00             
+ NA's   :41519              NA's   :41519            
+ AMT_REQ_CREDIT_BUREAU_WEEK AMT_REQ_CREDIT_BUREAU_MON AMT_REQ_CREDIT_BUREAU_QRT
+ Min.   :0.00               Min.   : 0.00             Min.   :  0.00           
+ 1st Qu.:0.00               1st Qu.: 0.00             1st Qu.:  0.00           
+ Median :0.00               Median : 0.00             Median :  0.00           
+ Mean   :0.03               Mean   : 0.27             Mean   :  0.27           
+ 3rd Qu.:0.00               3rd Qu.: 0.00             3rd Qu.:  0.00           
+ Max.   :8.00               Max.   :27.00             Max.   :261.00           
+ NA's   :41519              NA's   :41519             NA's   :41519            
+ AMT_REQ_CREDIT_BUREAU_YEAR
+ Min.   : 0.0              
+ 1st Qu.: 0.0              
+ Median : 1.0              
+ Mean   : 1.9              
+ 3rd Qu.: 3.0              
+ Max.   :25.0              
+ NA's   :41519             </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(application_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  [1] "SK_ID_CURR"                   "TARGET"                      
+  [3] "NAME_CONTRACT_TYPE"           "CODE_GENDER"                 
+  [5] "FLAG_OWN_CAR"                 "FLAG_OWN_REALTY"             
+  [7] "CNT_CHILDREN"                 "AMT_INCOME_TOTAL"            
+  [9] "AMT_CREDIT"                   "AMT_ANNUITY"                 
+ [11] "AMT_GOODS_PRICE"              "NAME_TYPE_SUITE"             
+ [13] "NAME_INCOME_TYPE"             "NAME_EDUCATION_TYPE"         
+ [15] "NAME_FAMILY_STATUS"           "NAME_HOUSING_TYPE"           
+ [17] "REGION_POPULATION_RELATIVE"   "DAYS_BIRTH"                  
+ [19] "DAYS_EMPLOYED"                "DAYS_REGISTRATION"           
+ [21] "DAYS_ID_PUBLISH"              "OWN_CAR_AGE"                 
+ [23] "FLAG_MOBIL"                   "FLAG_EMP_PHONE"              
+ [25] "FLAG_WORK_PHONE"              "FLAG_CONT_MOBILE"            
+ [27] "FLAG_PHONE"                   "FLAG_EMAIL"                  
+ [29] "OCCUPATION_TYPE"              "CNT_FAM_MEMBERS"             
+ [31] "REGION_RATING_CLIENT"         "REGION_RATING_CLIENT_W_CITY" 
+ [33] "WEEKDAY_APPR_PROCESS_START"   "HOUR_APPR_PROCESS_START"     
+ [35] "REG_REGION_NOT_LIVE_REGION"   "REG_REGION_NOT_WORK_REGION"  
+ [37] "LIVE_REGION_NOT_WORK_REGION"  "REG_CITY_NOT_LIVE_CITY"      
+ [39] "REG_CITY_NOT_WORK_CITY"       "LIVE_CITY_NOT_WORK_CITY"     
+ [41] "ORGANIZATION_TYPE"            "EXT_SOURCE_1"                
+ [43] "EXT_SOURCE_2"                 "EXT_SOURCE_3"                
+ [45] "APARTMENTS_AVG"               "BASEMENTAREA_AVG"            
+ [47] "YEARS_BEGINEXPLUATATION_AVG"  "YEARS_BUILD_AVG"             
+ [49] "COMMONAREA_AVG"               "ELEVATORS_AVG"               
+ [51] "ENTRANCES_AVG"                "FLOORSMAX_AVG"               
+ [53] "FLOORSMIN_AVG"                "LANDAREA_AVG"                
+ [55] "LIVINGAPARTMENTS_AVG"         "LIVINGAREA_AVG"              
+ [57] "NONLIVINGAPARTMENTS_AVG"      "NONLIVINGAREA_AVG"           
+ [59] "APARTMENTS_MODE"              "BASEMENTAREA_MODE"           
+ [61] "YEARS_BEGINEXPLUATATION_MODE" "YEARS_BUILD_MODE"            
+ [63] "COMMONAREA_MODE"              "ELEVATORS_MODE"              
+ [65] "ENTRANCES_MODE"               "FLOORSMAX_MODE"              
+ [67] "FLOORSMIN_MODE"               "LANDAREA_MODE"               
+ [69] "LIVINGAPARTMENTS_MODE"        "LIVINGAREA_MODE"             
+ [71] "NONLIVINGAPARTMENTS_MODE"     "NONLIVINGAREA_MODE"          
+ [73] "APARTMENTS_MEDI"              "BASEMENTAREA_MEDI"           
+ [75] "YEARS_BEGINEXPLUATATION_MEDI" "YEARS_BUILD_MEDI"            
+ [77] "COMMONAREA_MEDI"              "ELEVATORS_MEDI"              
+ [79] "ENTRANCES_MEDI"               "FLOORSMAX_MEDI"              
+ [81] "FLOORSMIN_MEDI"               "LANDAREA_MEDI"               
+ [83] "LIVINGAPARTMENTS_MEDI"        "LIVINGAREA_MEDI"             
+ [85] "NONLIVINGAPARTMENTS_MEDI"     "NONLIVINGAREA_MEDI"          
+ [87] "FONDKAPREMONT_MODE"           "HOUSETYPE_MODE"              
+ [89] "TOTALAREA_MODE"               "WALLSMATERIAL_MODE"          
+ [91] "EMERGENCYSTATE_MODE"          "OBS_30_CNT_SOCIAL_CIRCLE"    
+ [93] "DEF_30_CNT_SOCIAL_CIRCLE"     "OBS_60_CNT_SOCIAL_CIRCLE"    
+ [95] "DEF_60_CNT_SOCIAL_CIRCLE"     "DAYS_LAST_PHONE_CHANGE"      
+ [97] "FLAG_DOCUMENT_2"              "FLAG_DOCUMENT_3"             
+ [99] "FLAG_DOCUMENT_4"              "FLAG_DOCUMENT_5"             
+[101] "FLAG_DOCUMENT_6"              "FLAG_DOCUMENT_7"             
+[103] "FLAG_DOCUMENT_8"              "FLAG_DOCUMENT_9"             
+[105] "FLAG_DOCUMENT_10"             "FLAG_DOCUMENT_11"            
+[107] "FLAG_DOCUMENT_12"             "FLAG_DOCUMENT_13"            
+[109] "FLAG_DOCUMENT_14"             "FLAG_DOCUMENT_15"            
+[111] "FLAG_DOCUMENT_16"             "FLAG_DOCUMENT_17"            
+[113] "FLAG_DOCUMENT_18"             "FLAG_DOCUMENT_19"            
+[115] "FLAG_DOCUMENT_20"             "FLAG_DOCUMENT_21"            
+[117] "AMT_REQ_CREDIT_BUREAU_HOUR"   "AMT_REQ_CREDIT_BUREAU_DAY"   
+[119] "AMT_REQ_CREDIT_BUREAU_WEEK"   "AMT_REQ_CREDIT_BUREAU_MON"   
+[121] "AMT_REQ_CREDIT_BUREAU_QRT"    "AMT_REQ_CREDIT_BUREAU_YEAR"  </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Count defaults (1) and non-defaults (0) to check the class imbalance.</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>target_count <span class="ot">&lt;-</span> <span class="fu">table</span>(application_train<span class="sc">$</span>TARGET)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>target_percent <span class="ot">&lt;-</span> <span class="fu">prop.table</span>(target_count) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>target_count</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+     0      1 
+282686  24825 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>target_percent</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+        0         1 
+91.927118  8.072882 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the number and percentage of missing values in each column.</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>missing_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">variable =</span> <span class="fu">names</span>(application_train),</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">missing_count =</span> <span class="fu">colSums</span>(<span class="fu">is.na</span>(application_train)),</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">missing_percent =</span> <span class="fu">colMeans</span>(<span class="fu">is.na</span>(application_train)) <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">NULL</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(missing_count <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(missing_percent))</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(missing_table, <span class="dv">30</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                   variable missing_count missing_percent
+1            COMMONAREA_AVG        214865        69.87230
+2           COMMONAREA_MODE        214865        69.87230
+3           COMMONAREA_MEDI        214865        69.87230
+4   NONLIVINGAPARTMENTS_AVG        213514        69.43296
+5  NONLIVINGAPARTMENTS_MODE        213514        69.43296
+6  NONLIVINGAPARTMENTS_MEDI        213514        69.43296
+7        FONDKAPREMONT_MODE        210295        68.38617
+8      LIVINGAPARTMENTS_AVG        210199        68.35495
+9     LIVINGAPARTMENTS_MODE        210199        68.35495
+10    LIVINGAPARTMENTS_MEDI        210199        68.35495
+11            FLOORSMIN_AVG        208642        67.84863
+12           FLOORSMIN_MODE        208642        67.84863
+13           FLOORSMIN_MEDI        208642        67.84863
+14          YEARS_BUILD_AVG        204488        66.49778
+15         YEARS_BUILD_MODE        204488        66.49778
+16         YEARS_BUILD_MEDI        204488        66.49778
+17              OWN_CAR_AGE        202929        65.99081
+18             LANDAREA_AVG        182590        59.37674
+19            LANDAREA_MODE        182590        59.37674
+20            LANDAREA_MEDI        182590        59.37674
+21         BASEMENTAREA_AVG        179943        58.51596
+22        BASEMENTAREA_MODE        179943        58.51596
+23        BASEMENTAREA_MEDI        179943        58.51596
+24             EXT_SOURCE_1        173378        56.38107
+25        NONLIVINGAREA_AVG        169682        55.17916
+26       NONLIVINGAREA_MODE        169682        55.17916
+27       NONLIVINGAREA_MEDI        169682        55.17916
+28            ELEVATORS_AVG        163891        53.29598
+29           ELEVATORS_MODE        163891        53.29598
+30           ELEVATORS_MEDI        163891        53.29598</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Separate numeric columns from categorical columns.</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>numeric_cols <span class="ot">&lt;-</span> <span class="fu">names</span>(application_train)[<span class="fu">vapply</span>(application_train, is.numeric, <span class="fu">logical</span>(<span class="dv">1</span>))]</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>categorical_cols <span class="ot">&lt;-</span> <span class="fu">names</span>(application_train)[<span class="sc">!</span><span class="fu">vapply</span>(application_train, is.numeric, <span class="fu">logical</span>(<span class="dv">1</span>))]</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Numeric:"</span>, <span class="fu">length</span>(numeric_cols), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Numeric: 106 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Categorical:"</span>, <span class="fu">length</span>(categorical_cols), <span class="st">"</span><span class="sc">\n\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Categorical: 16 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Categorical columns:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Categorical columns:</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(categorical_cols)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "NAME_CONTRACT_TYPE"         "CODE_GENDER"               
+ [3] "FLAG_OWN_CAR"               "FLAG_OWN_REALTY"           
+ [5] "NAME_TYPE_SUITE"            "NAME_INCOME_TYPE"          
+ [7] "NAME_EDUCATION_TYPE"        "NAME_FAMILY_STATUS"        
+ [9] "NAME_HOUSING_TYPE"          "OCCUPATION_TYPE"           
+[11] "WEEKDAY_APPR_PROCESS_START" "ORGANIZATION_TYPE"         
+[13] "FONDKAPREMONT_MODE"         "HOUSETYPE_MODE"            
+[15] "WALLSMATERIAL_MODE"         "EMERGENCYSTATE_MODE"       </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summarize how severe the missing-data problem is across the variables.</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Over 60% missing:"</span>, <span class="fu">sum</span>(missing_table<span class="sc">$</span>missing_percent <span class="sc">&gt;</span> <span class="dv">60</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Over 60% missing: 17 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"40-60% missing:"</span>, <span class="fu">sum</span>(missing_table<span class="sc">$</span>missing_percent <span class="sc">&gt;</span> <span class="dv">40</span> <span class="sc">&amp;</span> missing_table<span class="sc">$</span>missing_percent <span class="sc">&lt;=</span> <span class="dv">60</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>40-60% missing: 32 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"20-40% missing:"</span>, <span class="fu">sum</span>(missing_table<span class="sc">$</span>missing_percent <span class="sc">&gt;</span> <span class="dv">20</span> <span class="sc">&amp;</span> missing_table<span class="sc">$</span>missing_percent <span class="sc">&lt;=</span> <span class="dv">40</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>20-40% missing: 1 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Under 20% missing:"</span>, <span class="fu">sum</span>(missing_table<span class="sc">$</span>missing_percent <span class="sc">&lt;=</span> <span class="dv">20</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Under 20% missing: 17 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep customer IDs separate, use TARGET as y, and use the remaining columns as X.</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>ids <span class="ot">&lt;-</span> application_train<span class="sc">$</span>SK_ID_CURR</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> application_train<span class="sc">$</span>TARGET</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> application_train <span class="sc">|&gt;</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>TARGET, <span class="sc">-</span>SK_ID_CURR)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="random-split" class="level1">
+<h1>1. Random Split</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Select 70% of row numbers for training using a reproducible random seed.</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>random_train_rows <span class="ot">&lt;-</span> <span class="fu">sample</span>(</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">seq_len</span>(<span class="fu">nrow</span>(application_train)),</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">size =</span> <span class="fu">floor</span>(<span class="fl">0.70</span> <span class="sc">*</span> <span class="fu">nrow</span>(application_train))</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Divide the remaining 30% equally between validation and test sets.</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>random_temp_rows <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(application_train)), random_train_rows)</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>random_val_rows <span class="ot">&lt;-</span> <span class="fu">sample</span>(random_temp_rows, <span class="at">size =</span> <span class="fu">floor</span>(<span class="fl">0.50</span> <span class="sc">*</span> <span class="fu">length</span>(random_temp_rows)))</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>random_test_rows <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(random_temp_rows, random_val_rows)</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the three data frames using the selected row numbers.</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>random_train <span class="ot">&lt;-</span> application_train <span class="sc">|&gt;</span> <span class="fu">slice</span>(random_train_rows)</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>random_val <span class="ot">&lt;-</span> application_train <span class="sc">|&gt;</span> <span class="fu">slice</span>(random_val_rows)</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>random_test <span class="ot">&lt;-</span> application_train <span class="sc">|&gt;</span> <span class="fu">slice</span>(random_test_rows)</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>X_train_random <span class="ot">&lt;-</span> random_train <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>TARGET, <span class="sc">-</span>SK_ID_CURR)</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>y_train_random <span class="ot">&lt;-</span> random_train<span class="sc">$</span>TARGET</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>X_val_random <span class="ot">&lt;-</span> random_val <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>TARGET, <span class="sc">-</span>SK_ID_CURR)</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>y_val_random <span class="ot">&lt;-</span> random_val<span class="sc">$</span>TARGET</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>X_test_random <span class="ot">&lt;-</span> random_test <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>TARGET, <span class="sc">-</span>SK_ID_CURR)</span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>y_test_random <span class="ot">&lt;-</span> random_test<span class="sc">$</span>TARGET</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Training:"</span>, <span class="fu">nrow</span>(X_train_random), <span class="st">"rows x"</span>, <span class="fu">ncol</span>(X_train_random), <span class="st">"columns</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Training: 215257 rows x 120 columns</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Validation:"</span>, <span class="fu">nrow</span>(X_val_random), <span class="st">"rows x"</span>, <span class="fu">ncol</span>(X_val_random), <span class="st">"columns</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Validation: 46127 rows x 120 columns</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Test:"</span>, <span class="fu">nrow</span>(X_test_random), <span class="st">"rows x"</span>, <span class="fu">ncol</span>(X_test_random), <span class="st">"columns</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Test: 46127 rows x 120 columns</code></pre>
+</div>
+</div>
+</section>
+<section id="stratified-split" class="level1">
+<h1>2. Stratified Split</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add a temporary row ID so rows can be tracked through the split.</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>data_with_row_id <span class="ot">&lt;-</span> application_train <span class="sc">|&gt;</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">.row_id =</span> <span class="fu">row_number</span>())</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Sample 70% within each TARGET group to preserve the class percentages.</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>strat_train <span class="ot">&lt;-</span> data_with_row_id <span class="sc">|&gt;</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(TARGET) <span class="sc">|&gt;</span></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_sample</span>(<span class="at">prop =</span> <span class="fl">0.70</span>) <span class="sc">|&gt;</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Rows not selected for training form the temporary 30% set.</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>strat_temp <span class="ot">&lt;-</span> data_with_row_id <span class="sc">|&gt;</span></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anti_join</span>(strat_train <span class="sc">|&gt;</span> <span class="fu">select</span>(.row_id), <span class="at">by =</span> <span class="st">".row_id"</span>)</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Split the temporary set equally into validation and test sets within each class.</span></span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a>strat_val <span class="ot">&lt;-</span> strat_temp <span class="sc">|&gt;</span></span>
+<span id="cb43-19"><a href="#cb43-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(TARGET) <span class="sc">|&gt;</span></span>
+<span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_sample</span>(<span class="at">prop =</span> <span class="fl">0.50</span>) <span class="sc">|&gt;</span></span>
+<span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb43-22"><a href="#cb43-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-23"><a href="#cb43-23" aria-hidden="true" tabindex="-1"></a>strat_test <span class="ot">&lt;-</span> strat_temp <span class="sc">|&gt;</span></span>
+<span id="cb43-24"><a href="#cb43-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">anti_join</span>(strat_val <span class="sc">|&gt;</span> <span class="fu">select</span>(.row_id), <span class="at">by =</span> <span class="st">".row_id"</span>)</span>
+<span id="cb43-25"><a href="#cb43-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-26"><a href="#cb43-26" aria-hidden="true" tabindex="-1"></a><span class="co"># The temporary row ID is no longer needed after splitting.</span></span>
+<span id="cb43-27"><a href="#cb43-27" aria-hidden="true" tabindex="-1"></a>strat_train <span class="ot">&lt;-</span> strat_train <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>.row_id)</span>
+<span id="cb43-28"><a href="#cb43-28" aria-hidden="true" tabindex="-1"></a>strat_val <span class="ot">&lt;-</span> strat_val <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>.row_id)</span>
+<span id="cb43-29"><a href="#cb43-29" aria-hidden="true" tabindex="-1"></a>strat_test <span class="ot">&lt;-</span> strat_test <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>.row_id)</span>
+<span id="cb43-30"><a href="#cb43-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-31"><a href="#cb43-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Separate predictors (X) and the outcome (y) for each stratified set.</span></span>
+<span id="cb43-32"><a href="#cb43-32" aria-hidden="true" tabindex="-1"></a>X_train_strat <span class="ot">&lt;-</span> strat_train <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>TARGET, <span class="sc">-</span>SK_ID_CURR)</span>
+<span id="cb43-33"><a href="#cb43-33" aria-hidden="true" tabindex="-1"></a>y_train_strat <span class="ot">&lt;-</span> strat_train<span class="sc">$</span>TARGET</span>
+<span id="cb43-34"><a href="#cb43-34" aria-hidden="true" tabindex="-1"></a>X_val_strat <span class="ot">&lt;-</span> strat_val <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>TARGET, <span class="sc">-</span>SK_ID_CURR)</span>
+<span id="cb43-35"><a href="#cb43-35" aria-hidden="true" tabindex="-1"></a>y_val_strat <span class="ot">&lt;-</span> strat_val<span class="sc">$</span>TARGET</span>
+<span id="cb43-36"><a href="#cb43-36" aria-hidden="true" tabindex="-1"></a>X_test_strat <span class="ot">&lt;-</span> strat_test <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>TARGET, <span class="sc">-</span>SK_ID_CURR)</span>
+<span id="cb43-37"><a href="#cb43-37" aria-hidden="true" tabindex="-1"></a>y_test_strat <span class="ot">&lt;-</span> strat_test<span class="sc">$</span>TARGET</span>
+<span id="cb43-38"><a href="#cb43-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-39"><a href="#cb43-39" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Training:"</span>, <span class="fu">nrow</span>(X_train_strat), <span class="st">"rows x"</span>, <span class="fu">ncol</span>(X_train_strat), <span class="st">"columns</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Training: 215257 rows x 120 columns</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Validation:"</span>, <span class="fu">nrow</span>(X_val_strat), <span class="st">"rows x"</span>, <span class="fu">ncol</span>(X_val_strat), <span class="st">"columns</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Validation: 46127 rows x 120 columns</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Test:"</span>, <span class="fu">nrow</span>(X_test_strat), <span class="st">"rows x"</span>, <span class="fu">ncol</span>(X_test_strat), <span class="st">"columns</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Test: 46127 rows x 120 columns</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This helper displays the percentage of observations in each TARGET class.</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>class_percent <span class="ot">&lt;-</span> <span class="cf">function</span>(values) {</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">prop.table</span>(<span class="fu">table</span>(values)) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Original:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Original:</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">class_percent</span>(y))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>values
+        0         1 
+91.927118  8.072882 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Training:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Training:</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">class_percent</span>(y_train_strat))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>values
+        0         1 
+91.927324  8.072676 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Validation:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Validation:</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">class_percent</span>(y_val_strat))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>values
+        0         1 
+91.926637  8.073363 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Test:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Test:</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">class_percent</span>(y_test_strat))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>values
+        0         1 
+91.926637  8.073363 </code></pre>
+</div>
+</div>
+</section>
+<section id="logistic-regression-baseline" class="level1">
+<h1>3. Logistic Regression Baseline</h1>
+<p>This baseline uses the stratified training and validation sets created above. The code uses <code>tidyverse</code> for data preparation and base R’s built-in <code>glm()</code> for logistic regression. All medians, modes, means, standard deviations, and category levels are learned from the training set only. The test set remains untouched for the final evaluation.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify numeric and categorical columns from the training set.</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>numeric_features <span class="ot">&lt;-</span> X_train_strat <span class="sc">|&gt;</span></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric)) <span class="sc">|&gt;</span></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>categorical_features <span class="ot">&lt;-</span> X_train_strat <span class="sc">|&gt;</span></span>
+<span id="cb65-7"><a href="#cb65-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(<span class="fu">Negate</span>(is.numeric))) <span class="sc">|&gt;</span></span>
+<span id="cb65-8"><a href="#cb65-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>()</span>
+<span id="cb65-9"><a href="#cb65-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-10"><a href="#cb65-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Store the training-set values needed for preprocessing.</span></span>
+<span id="cb65-11"><a href="#cb65-11" aria-hidden="true" tabindex="-1"></a>numeric_medians <span class="ot">&lt;-</span> X_train_strat <span class="sc">|&gt;</span></span>
+<span id="cb65-12"><a href="#cb65-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(numeric_features), <span class="sc">~</span> <span class="fu">median</span>(.x, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span>
+<span id="cb65-13"><a href="#cb65-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-14"><a href="#cb65-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Return the category that appears most often in a variable.</span></span>
+<span id="cb65-15"><a href="#cb65-15" aria-hidden="true" tabindex="-1"></a>most_frequent <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb65-16"><a href="#cb65-16" aria-hidden="true" tabindex="-1"></a>  observed <span class="ot">&lt;-</span> x[<span class="sc">!</span><span class="fu">is.na</span>(x)]</span>
+<span id="cb65-17"><a href="#cb65-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(<span class="fu">sort</span>(<span class="fu">table</span>(observed), <span class="at">decreasing =</span> <span class="cn">TRUE</span>))[<span class="dv">1</span>]</span>
+<span id="cb65-18"><a href="#cb65-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb65-19"><a href="#cb65-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-20"><a href="#cb65-20" aria-hidden="true" tabindex="-1"></a>categorical_modes <span class="ot">&lt;-</span> X_train_strat <span class="sc">|&gt;</span></span>
+<span id="cb65-21"><a href="#cb65-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(categorical_features), most_frequent))</span>
+<span id="cb65-22"><a href="#cb65-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-23"><a href="#cb65-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply the same missing-value rules to training and validation data.</span></span>
+<span id="cb65-24"><a href="#cb65-24" aria-hidden="true" tabindex="-1"></a>impute_data <span class="ot">&lt;-</span> <span class="cf">function</span>(data) {</span>
+<span id="cb65-25"><a href="#cb65-25" aria-hidden="true" tabindex="-1"></a>  data <span class="sc">|&gt;</span></span>
+<span id="cb65-26"><a href="#cb65-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb65-27"><a href="#cb65-27" aria-hidden="true" tabindex="-1"></a>      <span class="fu">across</span>(</span>
+<span id="cb65-28"><a href="#cb65-28" aria-hidden="true" tabindex="-1"></a>        <span class="fu">all_of</span>(numeric_features),</span>
+<span id="cb65-29"><a href="#cb65-29" aria-hidden="true" tabindex="-1"></a>        <span class="sc">~</span> <span class="fu">replace_na</span>(.x, numeric_medians[[<span class="fu">cur_column</span>()]])</span>
+<span id="cb65-30"><a href="#cb65-30" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb65-31"><a href="#cb65-31" aria-hidden="true" tabindex="-1"></a>      <span class="fu">across</span>(</span>
+<span id="cb65-32"><a href="#cb65-32" aria-hidden="true" tabindex="-1"></a>        <span class="fu">all_of</span>(categorical_features),</span>
+<span id="cb65-33"><a href="#cb65-33" aria-hidden="true" tabindex="-1"></a>        <span class="sc">~</span> <span class="fu">replace_na</span>(.x, categorical_modes[[<span class="fu">cur_column</span>()]])</span>
+<span id="cb65-34"><a href="#cb65-34" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb65-35"><a href="#cb65-35" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb65-36"><a href="#cb65-36" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb65-37"><a href="#cb65-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-38"><a href="#cb65-38" aria-hidden="true" tabindex="-1"></a>train_processed <span class="ot">&lt;-</span> <span class="fu">impute_data</span>(X_train_strat)</span>
+<span id="cb65-39"><a href="#cb65-39" aria-hidden="true" tabindex="-1"></a>val_processed <span class="ot">&lt;-</span> <span class="fu">impute_data</span>(X_val_strat)</span>
+<span id="cb65-40"><a href="#cb65-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-41"><a href="#cb65-41" aria-hidden="true" tabindex="-1"></a><span class="co"># Treat validation categories not seen during training as the training mode.</span></span>
+<span id="cb65-42"><a href="#cb65-42" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (column <span class="cf">in</span> categorical_features) {</span>
+<span id="cb65-43"><a href="#cb65-43" aria-hidden="true" tabindex="-1"></a>  training_values <span class="ot">&lt;-</span> <span class="fu">unique</span>(train_processed[[column]])</span>
+<span id="cb65-44"><a href="#cb65-44" aria-hidden="true" tabindex="-1"></a>  val_processed[[column]][<span class="sc">!</span>val_processed[[column]] <span class="sc">%in%</span> training_values] <span class="ot">&lt;-</span></span>
+<span id="cb65-45"><a href="#cb65-45" aria-hidden="true" tabindex="-1"></a>    categorical_modes[[column]]</span>
+<span id="cb65-46"><a href="#cb65-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-47"><a href="#cb65-47" aria-hidden="true" tabindex="-1"></a>  train_processed[[column]] <span class="ot">&lt;-</span> <span class="fu">factor</span>(train_processed[[column]], <span class="at">levels =</span> training_values)</span>
+<span id="cb65-48"><a href="#cb65-48" aria-hidden="true" tabindex="-1"></a>  val_processed[[column]] <span class="ot">&lt;-</span> <span class="fu">factor</span>(val_processed[[column]], <span class="at">levels =</span> training_values)</span>
+<span id="cb65-49"><a href="#cb65-49" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb65-50"><a href="#cb65-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-51"><a href="#cb65-51" aria-hidden="true" tabindex="-1"></a><span class="co"># Standardize numeric columns using training-set means and standard deviations.</span></span>
+<span id="cb65-52"><a href="#cb65-52" aria-hidden="true" tabindex="-1"></a>numeric_means <span class="ot">&lt;-</span> train_processed <span class="sc">|&gt;</span></span>
+<span id="cb65-53"><a href="#cb65-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(numeric_features), mean))</span>
+<span id="cb65-54"><a href="#cb65-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-55"><a href="#cb65-55" aria-hidden="true" tabindex="-1"></a>numeric_sds <span class="ot">&lt;-</span> train_processed <span class="sc">|&gt;</span></span>
+<span id="cb65-56"><a href="#cb65-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(numeric_features), sd)) <span class="sc">|&gt;</span></span>
+<span id="cb65-57"><a href="#cb65-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(.x) <span class="sc">|</span> .x <span class="sc">==</span> <span class="dv">0</span>, <span class="dv">1</span>, .x)))</span>
+<span id="cb65-58"><a href="#cb65-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-59"><a href="#cb65-59" aria-hidden="true" tabindex="-1"></a>standardize_data <span class="ot">&lt;-</span> <span class="cf">function</span>(data) {</span>
+<span id="cb65-60"><a href="#cb65-60" aria-hidden="true" tabindex="-1"></a><span class="co"># Subtract the training mean and divide by the training standard deviation.</span></span>
+<span id="cb65-61"><a href="#cb65-61" aria-hidden="true" tabindex="-1"></a>  data <span class="sc">|&gt;</span></span>
+<span id="cb65-62"><a href="#cb65-62" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb65-63"><a href="#cb65-63" aria-hidden="true" tabindex="-1"></a>      <span class="fu">across</span>(</span>
+<span id="cb65-64"><a href="#cb65-64" aria-hidden="true" tabindex="-1"></a>        <span class="fu">all_of</span>(numeric_features),</span>
+<span id="cb65-65"><a href="#cb65-65" aria-hidden="true" tabindex="-1"></a>        <span class="sc">~</span> (.x <span class="sc">-</span> numeric_means[[<span class="fu">cur_column</span>()]]) <span class="sc">/</span> numeric_sds[[<span class="fu">cur_column</span>()]]</span>
+<span id="cb65-66"><a href="#cb65-66" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb65-67"><a href="#cb65-67" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb65-68"><a href="#cb65-68" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb65-69"><a href="#cb65-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-70"><a href="#cb65-70" aria-hidden="true" tabindex="-1"></a>train_processed <span class="ot">&lt;-</span> <span class="fu">standardize_data</span>(train_processed)</span>
+<span id="cb65-71"><a href="#cb65-71" aria-hidden="true" tabindex="-1"></a>val_processed <span class="ot">&lt;-</span> <span class="fu">standardize_data</span>(val_processed)</span>
+<span id="cb65-72"><a href="#cb65-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-73"><a href="#cb65-73" aria-hidden="true" tabindex="-1"></a><span class="co"># model.matrix converts categorical columns to 0/1 dummy variables.</span></span>
+<span id="cb65-74"><a href="#cb65-74" aria-hidden="true" tabindex="-1"></a><span class="co"># Its default treatment coding leaves out one reference level per category.</span></span>
+<span id="cb65-75"><a href="#cb65-75" aria-hidden="true" tabindex="-1"></a>matrix_terms <span class="ot">&lt;-</span> <span class="fu">terms</span>(<span class="sc">~</span> ., <span class="at">data =</span> train_processed)</span>
+<span id="cb65-76"><a href="#cb65-76" aria-hidden="true" tabindex="-1"></a>training_levels <span class="ot">&lt;-</span> <span class="fu">lapply</span>(train_processed[categorical_features], levels)</span>
+<span id="cb65-77"><a href="#cb65-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-78"><a href="#cb65-78" aria-hidden="true" tabindex="-1"></a>X_train_matrix <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(</span>
+<span id="cb65-79"><a href="#cb65-79" aria-hidden="true" tabindex="-1"></a>  matrix_terms,</span>
+<span id="cb65-80"><a href="#cb65-80" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> train_processed,</span>
+<span id="cb65-81"><a href="#cb65-81" aria-hidden="true" tabindex="-1"></a>  <span class="at">xlev =</span> training_levels</span>
+<span id="cb65-82"><a href="#cb65-82" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb65-83"><a href="#cb65-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-84"><a href="#cb65-84" aria-hidden="true" tabindex="-1"></a>X_val_matrix <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(</span>
+<span id="cb65-85"><a href="#cb65-85" aria-hidden="true" tabindex="-1"></a>  matrix_terms,</span>
+<span id="cb65-86"><a href="#cb65-86" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> val_processed,</span>
+<span id="cb65-87"><a href="#cb65-87" aria-hidden="true" tabindex="-1"></a>  <span class="at">xlev =</span> training_levels</span>
+<span id="cb65-88"><a href="#cb65-88" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb65-89"><a href="#cb65-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-90"><a href="#cb65-90" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit an ordinary logistic regression without weights, tuning, or resampling.</span></span>
+<span id="cb65-91"><a href="#cb65-91" aria-hidden="true" tabindex="-1"></a>baseline_fit <span class="ot">&lt;-</span> <span class="fu">glm.fit</span>(</span>
+<span id="cb65-92"><a href="#cb65-92" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> X_train_matrix,</span>
+<span id="cb65-93"><a href="#cb65-93" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> y_train_strat,</span>
+<span id="cb65-94"><a href="#cb65-94" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>()</span>
+<span id="cb65-95"><a href="#cb65-95" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb65-96"><a href="#cb65-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-97"><a href="#cb65-97" aria-hidden="true" tabindex="-1"></a><span class="co"># A redundant column can have an undefined coefficient; it contributes zero.</span></span>
+<span id="cb65-98"><a href="#cb65-98" aria-hidden="true" tabindex="-1"></a>baseline_coefficients <span class="ot">&lt;-</span> <span class="fu">replace_na</span>(baseline_fit<span class="sc">$</span>coefficients, <span class="dv">0</span>)</span>
+<span id="cb65-99"><a href="#cb65-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-100"><a href="#cb65-100" aria-hidden="true" tabindex="-1"></a>validation_probability <span class="ot">&lt;-</span> <span class="fu">as.vector</span>(</span>
+<span id="cb65-101"><a href="#cb65-101" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plogis</span>(X_val_matrix <span class="sc">%*%</span> baseline_coefficients)</span>
+<span id="cb65-102"><a href="#cb65-102" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb65-103"><a href="#cb65-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-104"><a href="#cb65-104" aria-hidden="true" tabindex="-1"></a><span class="co"># Use 0.50 as the cutoff for converting probabilities into class predictions.</span></span>
+<span id="cb65-105"><a href="#cb65-105" aria-hidden="true" tabindex="-1"></a>validation_prediction <span class="ot">&lt;-</span> <span class="fu">if_else</span>(validation_probability <span class="sc">&gt;=</span> <span class="fl">0.50</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb65-106"><a href="#cb65-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-107"><a href="#cb65-107" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the requested validation metrics.</span></span>
+<span id="cb65-108"><a href="#cb65-108" aria-hidden="true" tabindex="-1"></a>true_positive <span class="ot">&lt;-</span> <span class="fu">sum</span>(validation_prediction <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> y_val_strat <span class="sc">==</span> <span class="dv">1</span>)</span>
+<span id="cb65-109"><a href="#cb65-109" aria-hidden="true" tabindex="-1"></a>true_negative <span class="ot">&lt;-</span> <span class="fu">sum</span>(validation_prediction <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> y_val_strat <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb65-110"><a href="#cb65-110" aria-hidden="true" tabindex="-1"></a>false_positive <span class="ot">&lt;-</span> <span class="fu">sum</span>(validation_prediction <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> y_val_strat <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb65-111"><a href="#cb65-111" aria-hidden="true" tabindex="-1"></a>false_negative <span class="ot">&lt;-</span> <span class="fu">sum</span>(validation_prediction <span class="sc">==</span> <span class="dv">0</span> <span class="sc">&amp;</span> y_val_strat <span class="sc">==</span> <span class="dv">1</span>)</span>
+<span id="cb65-112"><a href="#cb65-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-113"><a href="#cb65-113" aria-hidden="true" tabindex="-1"></a>precision_value <span class="ot">&lt;-</span> <span class="fu">if_else</span>(</span>
+<span id="cb65-114"><a href="#cb65-114" aria-hidden="true" tabindex="-1"></a>  true_positive <span class="sc">+</span> false_positive <span class="sc">==</span> <span class="dv">0</span>,</span>
+<span id="cb65-115"><a href="#cb65-115" aria-hidden="true" tabindex="-1"></a>  <span class="dv">0</span>,</span>
+<span id="cb65-116"><a href="#cb65-116" aria-hidden="true" tabindex="-1"></a>  true_positive <span class="sc">/</span> (true_positive <span class="sc">+</span> false_positive)</span>
+<span id="cb65-117"><a href="#cb65-117" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb65-118"><a href="#cb65-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-119"><a href="#cb65-119" aria-hidden="true" tabindex="-1"></a>recall_value <span class="ot">&lt;-</span> true_positive <span class="sc">/</span> (true_positive <span class="sc">+</span> false_negative)</span>
+<span id="cb65-120"><a href="#cb65-120" aria-hidden="true" tabindex="-1"></a>f1_value <span class="ot">&lt;-</span> <span class="fu">if_else</span>(</span>
+<span id="cb65-121"><a href="#cb65-121" aria-hidden="true" tabindex="-1"></a>  precision_value <span class="sc">+</span> recall_value <span class="sc">==</span> <span class="dv">0</span>,</span>
+<span id="cb65-122"><a href="#cb65-122" aria-hidden="true" tabindex="-1"></a>  <span class="dv">0</span>,</span>
+<span id="cb65-123"><a href="#cb65-123" aria-hidden="true" tabindex="-1"></a>  <span class="dv">2</span> <span class="sc">*</span> precision_value <span class="sc">*</span> recall_value <span class="sc">/</span> (precision_value <span class="sc">+</span> recall_value)</span>
+<span id="cb65-124"><a href="#cb65-124" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb65-125"><a href="#cb65-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-126"><a href="#cb65-126" aria-hidden="true" tabindex="-1"></a><span class="co"># The rank formula calculates ROC-AUC from predicted probabilities.</span></span>
+<span id="cb65-127"><a href="#cb65-127" aria-hidden="true" tabindex="-1"></a>positive_ranks <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">rank</span>(validation_probability)[y_val_strat <span class="sc">==</span> <span class="dv">1</span>])</span>
+<span id="cb65-128"><a href="#cb65-128" aria-hidden="true" tabindex="-1"></a>n_positive <span class="ot">&lt;-</span> <span class="fu">sum</span>(y_val_strat <span class="sc">==</span> <span class="dv">1</span>)</span>
+<span id="cb65-129"><a href="#cb65-129" aria-hidden="true" tabindex="-1"></a>n_negative <span class="ot">&lt;-</span> <span class="fu">sum</span>(y_val_strat <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb65-130"><a href="#cb65-130" aria-hidden="true" tabindex="-1"></a>roc_auc_value <span class="ot">&lt;-</span> (</span>
+<span id="cb65-131"><a href="#cb65-131" aria-hidden="true" tabindex="-1"></a>  positive_ranks <span class="sc">-</span> n_positive <span class="sc">*</span> (n_positive <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb65-132"><a href="#cb65-132" aria-hidden="true" tabindex="-1"></a>) <span class="sc">/</span> (n_positive <span class="sc">*</span> n_negative)</span>
+<span id="cb65-133"><a href="#cb65-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-134"><a href="#cb65-134" aria-hidden="true" tabindex="-1"></a>validation_metrics <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb65-135"><a href="#cb65-135" aria-hidden="true" tabindex="-1"></a>  <span class="at">metric =</span> <span class="fu">c</span>(<span class="st">"ROC-AUC"</span>, <span class="st">"Accuracy"</span>, <span class="st">"F1 score"</span>, <span class="st">"Precision"</span>, <span class="st">"Recall"</span>),</span>
+<span id="cb65-136"><a href="#cb65-136" aria-hidden="true" tabindex="-1"></a>  <span class="at">estimate =</span> <span class="fu">c</span>(</span>
+<span id="cb65-137"><a href="#cb65-137" aria-hidden="true" tabindex="-1"></a>    roc_auc_value,</span>
+<span id="cb65-138"><a href="#cb65-138" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mean</span>(validation_prediction <span class="sc">==</span> y_val_strat),</span>
+<span id="cb65-139"><a href="#cb65-139" aria-hidden="true" tabindex="-1"></a>    f1_value,</span>
+<span id="cb65-140"><a href="#cb65-140" aria-hidden="true" tabindex="-1"></a>    precision_value,</span>
+<span id="cb65-141"><a href="#cb65-141" aria-hidden="true" tabindex="-1"></a>    recall_value</span>
+<span id="cb65-142"><a href="#cb65-142" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb65-143"><a href="#cb65-143" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb65-144"><a href="#cb65-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-145"><a href="#cb65-145" aria-hidden="true" tabindex="-1"></a>validation_confusion_matrix <span class="ot">&lt;-</span> <span class="fu">table</span>(</span>
+<span id="cb65-146"><a href="#cb65-146" aria-hidden="true" tabindex="-1"></a>  <span class="at">Actual =</span> <span class="fu">factor</span>(y_val_strat, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)),</span>
+<span id="cb65-147"><a href="#cb65-147" aria-hidden="true" tabindex="-1"></a>  <span class="at">Predicted =</span> <span class="fu">factor</span>(validation_prediction, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb65-148"><a href="#cb65-148" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb65-149"><a href="#cb65-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb65-150"><a href="#cb65-150" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the final validation results in the rendered report.</span></span>
+<span id="cb65-151"><a href="#cb65-151" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Logistic regression baseline -- validation metrics</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Logistic regression baseline -- validation metrics</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(validation_metrics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 2
+  metric    estimate
+  &lt;chr&gt;        &lt;dbl&gt;
+1 ROC-AUC     0.740 
+2 Accuracy    0.919 
+3 F1 score    0.0246
+4 Precision   0.5   
+5 Recall      0.0126</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Confusion matrix</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Confusion matrix</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(validation_confusion_matrix)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      Predicted
+Actual     0     1
+     0 42356    47
+     1  3677    47</code></pre>
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
