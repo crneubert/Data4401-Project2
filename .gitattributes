@@ -1,0 +1,2 @@
+# Preserve prediction CSV bytes so metadata checksums survive checkout on Windows.
+results/predictions/*.csv -text

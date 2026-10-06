@@ -1,0 +1,152 @@
+{
+  "model": "nn",
+  "feature_set": "application_only",
+  "split_strategy": "stratified",
+  "configuration": "starter_v1",
+  "seed": 42,
+  "evaluation_partition": "validation",
+  "optimizing_metric": "roc_auc",
+  "split_fingerprint": "cba88bf5788aa3a722df0da8fda8c4466dd40d68caa7091caca486f02d063114",
+  "feature_schema_fingerprint": "45cfb6dd1fccaffbedb588788d94f913d3d3a6909c27f577c3737f8cb41c7306",
+  "prepared_schema_version": 2,
+  "raw_feature_count": 121,
+  "model_feature_count": 313,
+  "rows": {
+    "train": 215257,
+    "validation": 46127
+  },
+  "positive_rates": {
+    "train": 0.08072675917624049,
+    "validation": 0.08073362672621241
+  },
+  "parameters": {
+    "hidden_units": [
+      128,
+      64
+    ],
+    "dropout": 0.2,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 1024,
+    "evaluation_batch_size": 4096,
+    "max_epochs": 30,
+    "patience": 5,
+    "threads": 4,
+    "device": "cpu",
+    "random_state": 42,
+    "loss": "BCEWithLogitsLoss",
+    "optimizer": "AdamW"
+  },
+  "selected_iteration": 8,
+  "preparation_seconds": 18.474000899936073,
+  "training_seconds": 66.74465360003524,
+  "prediction_seconds": 0.08148399996571243,
+  "metrics": {
+    "roc_auc": 0.7486413294379871,
+    "average_precision": 0.23039361115512852,
+    "accuracy": 0.9193314111041255,
+    "f1": 0.006938884440886042,
+    "precision": 0.5652173913043478,
+    "recall": 0.003490870032223416,
+    "log_loss": 0.24903281033039093,
+    "threshold": 0.5,
+    "confusion_matrix": {
+      "tn": 42393,
+      "fp": 10,
+      "fn": 3711,
+      "tp": 13
+    }
+  },
+  "training_history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.2735234741633363,
+      "validation_log_loss": 0.25028499960899353,
+      "validation_roc_auc": 0.7444606053930938
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.25269717714613044,
+      "validation_log_loss": 0.2503091096878052,
+      "validation_roc_auc": 0.7439190237005959
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.25150167774820337,
+      "validation_log_loss": 0.24949361383914948,
+      "validation_roc_auc": 0.7469051909288484
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.251007923340539,
+      "validation_log_loss": 0.24941377341747284,
+      "validation_roc_auc": 0.748369739079473
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.24999786603357016,
+      "validation_log_loss": 0.25019514560699463,
+      "validation_roc_auc": 0.7469586078473207
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.24962974112862948,
+      "validation_log_loss": 0.24930471181869507,
+      "validation_roc_auc": 0.7467790104782779
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.24840411801044615,
+      "validation_log_loss": 0.2495487779378891,
+      "validation_roc_auc": 0.7470931855514651
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.2475829403601794,
+      "validation_log_loss": 0.24903281033039093,
+      "validation_roc_auc": 0.7486413294379871
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.2466646308248089,
+      "validation_log_loss": 0.2494630366563797,
+      "validation_roc_auc": 0.748413337037413
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.24596049137293016,
+      "validation_log_loss": 0.24949674308300018,
+      "validation_roc_auc": 0.7473562551673822
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.24480943495959104,
+      "validation_log_loss": 0.24981850385665894,
+      "validation_roc_auc": 0.7475045464858658
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.24358135615625154,
+      "validation_log_loss": 0.2501664161682129,
+      "validation_roc_auc": 0.7455278988554227
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.24328003504083143,
+      "validation_log_loss": 0.2525312900543213,
+      "validation_roc_auc": 0.7458271982508989
+    }
+  ],
+  "versions": {
+    "python": "3.13.15",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6",
+    "scikit-learn": "1.9.1",
+    "torch": "2.14.1"
+  },
+  "holdout_evaluated": false,
+  "class_weighting": "none",
+  "threshold_tuned": false,
+  "run_id": "20261006T001149433793Z_6b36383e",
+  "created_at_utc": "2026-10-06T00:11:49.433793+00:00"
+}

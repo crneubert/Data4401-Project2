@@ -1,0 +1,144 @@
+{
+  "export_schema_version": 1,
+  "evaluation_partition": "validation",
+  "row_count": 46127,
+  "prediction_file": "nn_application_history_stratified_starter_v1_20261006T080721021120Z_70241f3b.csv",
+  "prediction_sha256": "2c262427c1926db7af8bb0ac9a8d85db8c47d0acd65484c16a6366a520f84bae",
+  "metric_file": "nn_application_history_stratified_starter_v1_20261006T080721021120Z_70241f3b.json",
+  "run_record": {
+    "model": "nn",
+    "feature_set": "application_history",
+    "split_strategy": "stratified",
+    "configuration": "starter_v1",
+    "seed": 42,
+    "evaluation_partition": "validation",
+    "optimizing_metric": "roc_auc",
+    "split_fingerprint": "cba88bf5788aa3a722df0da8fda8c4466dd40d68caa7091caca486f02d063114",
+    "feature_schema_fingerprint": "9633fda7924a91c1c4e31ff665f54b20379b49e01da5156a17f7f7ba413c3f2a",
+    "prepared_schema_version": 2,
+    "raw_feature_count": 303,
+    "model_feature_count": 653,
+    "rows": {
+      "train": 215257,
+      "validation": 46127
+    },
+    "positive_rates": {
+      "train": 0.08072675917624049,
+      "validation": 0.08073362672621241
+    },
+    "parameters": {
+      "hidden_units": [
+        128,
+        64
+      ],
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.0001,
+      "batch_size": 1024,
+      "evaluation_batch_size": 4096,
+      "max_epochs": 30,
+      "patience": 5,
+      "threads": 4,
+      "device": "cpu",
+      "random_state": 42,
+      "loss": "BCEWithLogitsLoss",
+      "optimizer": "AdamW"
+    },
+    "selected_iteration": 3,
+    "preparation_seconds": 24.73530549998395,
+    "training_seconds": 43.387567800004035,
+    "prediction_seconds": 0.06885430007241666,
+    "metrics": {
+      "roc_auc": 0.7765966130114671,
+      "average_precision": 0.2659425228653949,
+      "accuracy": 0.9194398074880222,
+      "f1": 0.009594882729211088,
+      "precision": 0.6428571428571429,
+      "recall": 0.004833512352309345,
+      "log_loss": 0.24103905260562897,
+      "threshold": 0.5,
+      "confusion_matrix": {
+        "tn": 42393,
+        "fp": 10,
+        "fn": 3706,
+        "tp": 18
+      }
+    },
+    "training_history": [
+      {
+        "epoch": 1,
+        "train_loss": 0.265053019064155,
+        "validation_log_loss": 0.24246928095817566,
+        "validation_roc_auc": 0.7711117118940042
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.24503882402009863,
+        "validation_log_loss": 0.24193450808525085,
+        "validation_roc_auc": 0.7729486617754205
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.24366059311291638,
+        "validation_log_loss": 0.24103905260562897,
+        "validation_roc_auc": 0.7765966130114671
+      },
+      {
+        "epoch": 4,
+        "train_loss": 0.24232002538149125,
+        "validation_log_loss": 0.24114225804805756,
+        "validation_roc_auc": 0.7765796000237403
+      },
+      {
+        "epoch": 5,
+        "train_loss": 0.24077045787644927,
+        "validation_log_loss": 0.24122564494609833,
+        "validation_roc_auc": 0.7750914464713842
+      },
+      {
+        "epoch": 6,
+        "train_loss": 0.2396378103114898,
+        "validation_log_loss": 0.24065886437892914,
+        "validation_roc_auc": 0.7761072703421442
+      },
+      {
+        "epoch": 7,
+        "train_loss": 0.23780754918639976,
+        "validation_log_loss": 0.2418193519115448,
+        "validation_roc_auc": 0.7739624781579582
+      },
+      {
+        "epoch": 8,
+        "train_loss": 0.2363672420836131,
+        "validation_log_loss": 0.24129314720630646,
+        "validation_roc_auc": 0.7756747136251557
+      }
+    ],
+    "versions": {
+      "python": "3.13.15",
+      "numpy": "2.5.3",
+      "pandas": "3.0.6",
+      "scikit-learn": "1.9.1",
+      "torch": "2.14.1"
+    },
+    "holdout_evaluated": false,
+    "class_weighting": "none",
+    "threshold_tuned": false,
+    "run_id": "20261006T080721021120Z_70241f3b",
+    "created_at_utc": "2026-10-06T08:07:21.021120+00:00"
+  },
+  "columns": {
+    "SK_ID_CURR": "Current application identifier; not a guaranteed unique person identifier.",
+    "TARGET": "Observed binary target: 1 = payment difficulties, 0 = no such target event.",
+    "predicted_probability": "Model probability for TARGET=1; full precision, not rounded for display.",
+    "predicted_label": "1 when predicted_probability >= 0.5; otherwise 0.",
+    "error_type": "TN=correct negative; FP=false positive; FN=false negative; TP=correct positive.",
+    "gender": "Original audit category; XNA/missing represented by UNKNOWN.",
+    "age_years": "Age at application from -DAYS_BIRTH/365.25; blank means missing.",
+    "age_group": "Prepared age bands: [0,25), [25,35), [35,45), [45,55), [55,65), [65,infinity); missing=UNKNOWN.",
+    "run_id": "Matches run_record.run_id and the aggregate metric JSON."
+  },
+  "sharing_note": "Share CSV and metadata together in the team repository or data storage. Review data-sharing rules before making applicant-level records public.",
+  "holdout_exported": false,
+  "raw_features_exported": false
+}
