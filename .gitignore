@@ -225,3 +225,11 @@ __marimo__/
 
 # Local assignment instructions
 /DATA4401-Project02.pdf
+
+# Local error-analysis predictions, models, and macOS metadata
+.DS_Store
+/results/experiments/*/predictions.csv
+/results/experiments/*/*.cbm
+/all_errors_with_features.csv
+/validation_predictions_with_features.csv
+/manual_error_review.csv

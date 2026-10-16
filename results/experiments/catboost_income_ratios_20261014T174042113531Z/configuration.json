@@ -1,0 +1,30 @@
+{
+  "hypothesis": "Explicit application income ratios improve relative-burden representation.",
+  "threshold_objective": "maximize eyeball F1; exploratory proxy, not a business cost objective",
+  "early_stopping_partition": "eyeball",
+  "holdout_evaluated": false,
+  "parameters": {
+    "iterations": 1000,
+    "depth": 6,
+    "learning_rate": 0.05,
+    "l2_leaf_reg": 3.0,
+    "loss_function": "Logloss",
+    "eval_metric": "AUC",
+    "random_seed": 42,
+    "thread_count": 4,
+    "task_type": "CPU",
+    "allow_writing_files": false,
+    "early_stopping_rounds": 75,
+    "use_best_model": true
+  },
+  "versions": {
+    "python": "3.12.2",
+    "numpy": "1.26.4",
+    "pandas": "2.2.2",
+    "scikit-learn": "1.5.1",
+    "catboost": "1.2.10"
+  },
+  "split_fingerprint": "cba88bf5788aa3a722df0da8fda8c4466dd40d68caa7091caca486f02d063114",
+  "historical_baseline": "20261006T080453081602Z_1732aa07",
+  "caveat": "Historical models used full validation for early stopping. This paired rerun uses eyeball only; blackbox is reserved within previously used validation and is not an untouched final holdout."
+}

@@ -1,0 +1,11 @@
+{
+  "auc_difference": 0.0004714090122373005,
+  "bootstrap_95_percent_interval": [
+    -0.0005773464096863301,
+    0.0017184552595898048
+  ],
+  "bootstrap_replicates": 200,
+  "seed": 42,
+  "method": "paired applicant bootstrap stratified by outcome; conditional on fitted models, does not capture training variability",
+  "decision": "No clear AUC improvement established; retain the original model as the reference and do not promote the ratio variant based on this run."
+}

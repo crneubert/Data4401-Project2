@@ -1,0 +1,7 @@
+comparison,role,same_four_flags,SK_ID_CURR,TARGET,AMT_INCOME_TOTAL,AMT_CREDIT,credit_to_income,annuity_to_income,NAME_INCOME_TYPE,DAYS_EMPLOYED,automatic_flags,nn_probability,nn_error_type,catboost_probability,catboost_error_type,lightgbm_probability,lightgbm_error_type
+shared_miss_high_ratio,case,False,101842,1,112500.0,1061599.5,9.43644,0.27708,Pensioner,365243,"credit_over_5x_income, employment_sentinel",0.054578397,FN,0.0697987214644764,FN,0.0576445910432775,FN
+shared_miss_high_ratio,correct_control,False,402651,0,96750.0,905688.0,9.361116279069767,0.24827906976744185,Working,-3215,"missing_external_score, credit_over_5x_income",0.08994757,TN,0.0635649910836791,TN,0.0566232862940935,TN
+shared_miss_employment_sentinel,case,False,101842,1,112500.0,1061599.5,9.43644,0.27708,Pensioner,365243,"credit_over_5x_income, employment_sentinel",0.054578397,FN,0.0697987214644764,FN,0.0576445910432775,FN
+shared_miss_employment_sentinel,correct_control,False,402651,0,96750.0,905688.0,9.361116279069767,0.24827906976744185,Working,-3215,"missing_external_score, credit_over_5x_income",0.08994757,TN,0.0635649910836791,TN,0.0566232862940935,TN
+model_disagreement,case,True,105485,0,112500.0,430582.5,3.8274,0.25692,Commercial associate,-382,missing_external_score,0.43020582,TN,0.6247166358554699,FP,0.6017302441763461,FP
+model_disagreement,correct_control,True,339595,0,112500.0,337500.0,3.0,0.29788,Working,-1506,missing_external_score,0.10993363,TN,0.1286063698022476,TN,0.1073250544645377,TN
