@@ -40,7 +40,7 @@ def main(directory):
     report+=summary.to_markdown(index=False)+'\n'
     (directory/'report.md').write_text(report)
     root=Path(__file__).resolve().parents[2]
-    logpath=root/'results/error_analysis/20261013_235655_925382/experiment_log.csv'
+    logpath=root/'results/error_analysis/review/experiment_log.csv'
     log=pd.read_csv(logpath,dtype=str).fillna('')
     mask=log.model.eq('catboost')
     for key,value in {'baseline_run_id':directory.name+'/baseline_rerun','change_tested':'Added APP_CREDIT_TO_INCOME and APP_ANNUITY_TO_INCOME; paired reruns with identical parameters and eyeball-only early stopping','new_run_id':directory.name+'/income_ratios','evaluation_partition':'blackbox (previously used validation; not final holdout)','before_roc_auc':before.roc_auc,'after_roc_auc':after.roc_auc,'before_recall':before.recall,'after_recall':after.recall,'before_f1':before.f1,'after_f1':after.f1,'before_threshold':.5,'after_threshold':.5,'fairness_findings':'See '+str(directory.relative_to(root))+'/group_summary.csv and group_comparison.csv; descriptive age/gender slices, small groups flagged','improved':'inconclusive' if low<=0<=high else ('yes_auc' if low>0 else 'no_auc'),'decision':decision+' Separate eyeball-F1 threshold policies are compared in report.md; no original notebook or holdout changed.'}.items():log.loc[mask,key]=str(value)

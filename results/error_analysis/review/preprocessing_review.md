@@ -22,4 +22,4 @@ The experiment log records this hypothesis and example IDs for each baseline. ch
 
 ## Subsequent experiment
 
-The no-testing statements above describe the initial review phase. An authorized follow-up has now completed a separate paired CatBoost ratio-feature and threshold comparison. See ../../experiments/catboost_income_ratios_20261014T174042113531Z/report.md. The ratio AUC gain is inconclusive; the existing feature set remains the reference. Original notebooks and the final holdout remain unchanged.
+The no-testing statements above describe the initial review phase. An authorized follow-up has now completed a separate paired CatBoost ratio-feature and threshold comparison. See ../../experiments/catboost_income_ratios/report.md. The ratio AUC gain is inconclusive; the existing feature set remains the reference. Original notebooks and the final holdout remain unchanged.

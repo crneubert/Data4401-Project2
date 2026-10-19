@@ -10,9 +10,8 @@ from scripts.project_data import load_table
 PROJECT_DIR = Path(__file__).resolve().parent
 PREDICTION_DIR = PROJECT_DIR / "results" / "predictions"
 
-timestamp = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S_%f")
 OUTPUT_DIR = (
-    PROJECT_DIR / "results" / "error_analysis" / timestamp
+    PROJECT_DIR / "results" / "error_analysis" / "review"
 )
 OUTPUT_DIR.mkdir(parents=True, exist_ok=False)
 

@@ -20,7 +20,7 @@ OUTPUT = Path(__file__).resolve().parents[1] / "results" / "figures"
 BLUE = "#2864A0"
 ORANGE = "#D57C28"
 
-# Original experiment: catboost_income_ratios_20261014T174042113531Z
+# Original experiment: catboost_income_ratios
 MODEL_NAMES = ["Original features", "With income ratios"]
 AUC_SCORES = [0.783802, 0.784274]
 

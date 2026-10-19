@@ -32,8 +32,8 @@ def choose_threshold(y, p):
 
 def main():
     from catboost import CatBoostClassifier
-    review = ROOT / 'results/error_analysis/20261013_235655_925382'
-    output = ROOT / 'results/experiments' / ('catboost_income_ratios_' + pd.Timestamp.now(tz='UTC').strftime('%Y%m%dT%H%M%S%fZ'))
+    review = ROOT / 'results/error_analysis/review'
+    output = ROOT / 'results/experiments' / 'catboost_income_ratios'
     output.mkdir(parents=True, exist_ok=False)
     bundle = load_prepared_data()
     data = get_partitions(bundle, 'application_history', 'stratified', partitions=('train', 'validation'))
